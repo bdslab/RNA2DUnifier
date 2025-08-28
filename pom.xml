@@ -12,6 +12,39 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <antlr4.version>4.13.2</antlr4.version>
     </properties>
-    
+
+    <dependencies>
+        <!-- Runtime ANTLR per eseguire il parser -->
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>${antlr4.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Genera le classi dal grammar durante 'generate-sources' -->
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>${antlr4.version}</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals><goal>antlr4</goal></goals>
+                        <configuration>
+                            <!-- Facoltativo: genera anche le classi Visitor -->
+                            <arguments>-visitor</arguments>
+                            <!-- cartella sorgente grammars (default: src/main/antlr4) -->
+                            <!-- output predefinito: target/generated-sources/antlr4 -->
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
