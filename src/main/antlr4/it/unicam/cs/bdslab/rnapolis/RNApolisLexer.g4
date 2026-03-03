@@ -11,6 +11,10 @@
  */
 lexer grammar RNApolisLexer;
 
+@header {
+    package: it.unicam.cs.bdslab.rnapolis;
+}
+
 // ------------------------------------------------
 // Fragments
 // ------------------------------------------------

@@ -12,6 +12,10 @@
  */
 parser grammar RNApolisParser;
 
+@header {
+    package: it.unicam.cs.bdslab.rnapolis;
+}
+
 options {
     tokenVocab = RNApolisLexer;
 }
