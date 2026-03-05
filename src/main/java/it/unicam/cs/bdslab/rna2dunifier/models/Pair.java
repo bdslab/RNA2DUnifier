@@ -84,4 +84,41 @@ public class Pair {
     public String toString() {
         return "(" + type + " " + pos1 + ":" + nucleotide1 + " " + pos2 + ":" + nucleotide2 + ")";
     }
+
+    public static class Builder {
+        private int pos1;
+        private int pos2;
+        private BondType type;
+        private String nucleotide1;
+        private String nucleotide2;
+
+        public Builder setPos1(int pos1) {
+            this.pos1 = pos1;
+            return this;
+        }
+
+        public Builder setPos2(int pos2) {
+            this.pos2 = pos2;
+            return this;
+        }
+
+        public Builder setType(BondType type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder setNucleotide1(String nucleotide1) {
+            this.nucleotide1 = nucleotide1;
+            return this;
+        }
+
+        public Builder setNucleotide2(String nucleotide2) {
+            this.nucleotide2 = nucleotide2;
+            return this;
+        }
+
+        public Pair build() {
+            return new Pair(pos1, pos2, nucleotide1, nucleotide2, type);
+        }
+    }
 }
