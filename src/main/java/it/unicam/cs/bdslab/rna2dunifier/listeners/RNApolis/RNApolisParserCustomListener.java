@@ -127,7 +127,7 @@ public class RNApolisParserCustomListener implements RNApolisParserListener {
                     int openPos = stack.pop(); // last opening position
                     // create pair
                     currentBuilder = currentBuilder.addPair(
-                            new Pair(openPos, i,
+                            new Pair(openPos+1, i+1,
                                     String.valueOf(currentSequence.charAt(openPos)),
                                     String.valueOf(currentSequence.charAt(i)),
                                     BondType.fromString(currentInteractionType))
