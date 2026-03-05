@@ -42,6 +42,34 @@ public class ExtendedRNASecondaryStructure {
         return canonical;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+
+        // header info
+        result.append("Header Info: \n");
+        headerInfo.forEach((key, value) ->
+                result.append(key).append(": ").append(value).append("\n")
+        );
+
+        // sequence
+        result.append("Sequence: \n").append(sequence).append("\n");
+
+        // canonical pairs
+        result.append("Canonical Pairs: \n");
+        canonical.forEach(c ->
+            result.append(c.toString()).append("\n")
+        );
+
+        // pairs
+        result.append("Pairs: \n");
+        pairs.forEach(p ->
+            result.append(p.toString()).append("\n")
+        );
+
+        return result.toString();
+    }
+
     public static class Builder {
         private String sequence = "";
         private List<Pair> pairs = new ArrayList<>();

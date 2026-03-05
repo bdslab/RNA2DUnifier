@@ -79,4 +79,9 @@ public class Pair {
     public String getNucleotide2() {
         return nucleotide2;
     }
+
+    @Override
+    public String toString() {
+        return "(" + type + " " + pos1 + ":" + nucleotide1 + " " + pos2 + ":" + nucleotide2 + ")";
+    }
 }

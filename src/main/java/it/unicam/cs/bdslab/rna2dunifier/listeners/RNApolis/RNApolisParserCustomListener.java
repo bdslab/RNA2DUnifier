@@ -43,7 +43,7 @@ public class RNApolisParserCustomListener implements RNApolisParserListener {
 
     @Override
     public void exitStrandSection(RNApolisParser.StrandSectionContext ctx) {
-
+        structures.add(currentBuilder.build());
     }
 
     /**
@@ -53,7 +53,7 @@ public class RNApolisParserCustomListener implements RNApolisParserListener {
     @Override
     public void enterStrandName(RNApolisParser.StrandNameContext ctx) {
         String name = ctx.TITLE().getText();
-        currentBuilder.addHeaderInfo("strand_name", name);
+        currentBuilder = currentBuilder.addHeaderInfo("strand_name", name);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class RNApolisParserCustomListener implements RNApolisParserListener {
     @Override
     public void enterSequenceLine(RNApolisParser.SequenceLineContext ctx) {
         currentSequence = ctx.NUCLEOTIDE().getText();
-        currentBuilder.setSequence(currentSequence);
+        currentBuilder = currentBuilder.setSequence(currentSequence);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class RNApolisParserCustomListener implements RNApolisParserListener {
                 if (stack != null && !stack.isEmpty()) {
                     int openPos = stack.pop(); // last opening position
                     // create pair
-                    currentBuilder.addPair(
+                    currentBuilder = currentBuilder.addPair(
                             new Pair(openPos, i,
                                     String.valueOf(currentSequence.charAt(openPos)),
                                     String.valueOf(currentSequence.charAt(i)),
