@@ -35,6 +35,8 @@ residue: NUMBER;
 
 base_pair: BASE_PAIR;
 
-base_pair_annotation: BASE_PAIR_ANNOTATION;
+base_pair_annotation: BASE_PAIR_ANNOTATION ORIENTATION # pair
+                    | STACKED                          # stacked
+;
 
 saenger: SAENGER;

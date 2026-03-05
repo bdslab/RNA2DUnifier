@@ -48,20 +48,23 @@ FILE_NAME
 // ------------------------------------------------
 mode PAIRS_MODE;
 fragment P_WS: WS_CHAR;
-fragment PAIR_ANNOTATION: [sSWH+-.];
-fragment ORIENTATION: 'cis' | 'tran';
+ORIENTATION: 'cis' | 'tran';
 
 CHARS_TO_SKIP: [_,: \n] -> skip;
 
 CHAIN: [A-Z];
+
+PAIR_ANNOTATION: [sSWH+-.?];
 
 NUMBER: [1-9]+[0-9]*;
 
 BASE_PAIR: IUPAC_CODE'-'IUPAC_CODE;
 
 BASE_PAIR_ANNOTATION:
-    PAIR_ANNOTATION '/' PAIR_ANNOTATION P_WS ORIENTATION | 'stacked'
+    PAIR_ANNOTATION '/' PAIR_ANNOTATION P_WS
 ;
+
+STACKED: 'stacked';
 
 SAENGER: [XVI]+ | 'n/a' | '!' ('1H')? '('[bs]'_'[bs]')';
 
