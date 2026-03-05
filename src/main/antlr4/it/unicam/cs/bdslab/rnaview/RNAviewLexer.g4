@@ -10,10 +10,6 @@
  */
 lexer grammar RNAviewLexer;
 
-@header {
-    package: it.unicam.cs.bdslab.rnaview;
-}
-
 // ------------------------------------------------
 // Fragments
 // ------------------------------------------------

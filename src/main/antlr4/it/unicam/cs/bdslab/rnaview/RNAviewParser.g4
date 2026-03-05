@@ -15,10 +15,6 @@
  */
 parser grammar RNAviewParser;
 
-@header {
-    package: it.unicam.cs.bdslab.rnaview;
-}
-
 options {
     tokenVocab = RNAviewLexer;
 }
