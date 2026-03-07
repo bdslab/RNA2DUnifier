@@ -35,8 +35,6 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
     @Override
     public void enterPairs(RNAviewParser.PairsContext ctx) {
         currentPairBuilder = new Pair.Builder();
-        currentPairBuilder = currentPairBuilder.setPos1(Integer.parseInt(ctx.residue().getFirst().NUMBER().getText()));
-        currentPairBuilder = currentPairBuilder.setPos2(Integer.parseInt(ctx.residue().getLast().NUMBER().getText()));
 
 
     }
@@ -48,7 +46,11 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
 
     @Override
     public void enterBase_numbers(RNAviewParser.Base_numbersContext ctx) {
+        currentPairBuilder = currentPairBuilder
+                .setPos1(Integer.parseInt(ctx.NUMBER().getFirst().getText()));
 
+        currentPairBuilder = currentPairBuilder
+                .setPos2(Integer.parseInt(ctx.NUMBER().getLast().getText()));
     }
 
     @Override

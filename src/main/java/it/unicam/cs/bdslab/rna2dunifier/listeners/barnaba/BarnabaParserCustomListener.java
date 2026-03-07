@@ -64,14 +64,13 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
 
     @Override
     public void enterSequence(BarnabaParser.SequenceContext ctx) {
-        // TODO: build sequence
 
     }
 
     @Override
     public void exitSequence(BarnabaParser.SequenceContext ctx) {
         StringBuilder seq = new StringBuilder();
-        sequence.forEach(s -> seq.append(s));
+        sequence.forEach(seq::append);
         structureBuilder = structureBuilder.setSequence(seq.toString());
     }
 
@@ -82,12 +81,10 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
         int i = 0;
 
         if(nucleotidePositionMap.isEmpty()) {
-            differencePosition = elPosition-1;
+            differencePosition = elPosition;
             lastPosition = elPosition;
-
-            i = elPosition-differencePosition;
         }
-        /**
+        /*
          * Questo blocco toglie il salto presente nella sequenza
          * GGGCUGUUUUUCUCGCUGACUUUCAGCCC       CAAACAAAAAAUGUCAGCA
          * diventa:

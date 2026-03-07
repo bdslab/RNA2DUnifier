@@ -15,24 +15,24 @@ import org.antlr.v4.runtime.tree.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        /*String input = """
+        String input3 = """
                 >strand_A
-                seq GGAAGGUUUUUCUUUUCCUGAGGCGAAAGUCUCAGGUUUUGCUUUUUGGCCUUUCUUAAAAAAAAAAAAAGCAAAA
-                cWW .[[[[[..........((((((((....))))))))(((((((((((..]]]]]...........)))))))))))
-                cWH ......E({BFDA<C[.................................................e)}bfd.a>c]
-                cSW ..................................................(............)............
-                tSW .....(..........................................................)...........
-                tSH ........................(.).................................................
+                seq GGGCUGUUUUUCUCGCUGACUUUCAGCCCCAAACAAAAAAUGUCAGCA
+                cWW [[[[[[........(((((((((]]]]]]........))).)))))).
+                cWH ......<{([..........................>})]........
+                cSH ....(()....[.........()..(......).)....()..]....
+                cSH ......()........................................
+                tHH ............(................................)..
                 """;
-        CharStream cs = CharStreams.fromString(input);
-        RNApolisLexer lexer = new RNApolisLexer(cs);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        RNApolisParser parser = new RNApolisParser(tokens);
-        ParseTree tree = parser.rnapolisFile(); // parse
-        RNApolisParserCustomListener listener = new RNApolisParserCustomListener();
-        ParseTreeWalker.DEFAULT.walk(listener, tree);
-        System.out.println(listener.getStructures().toString());
-        */
+        CharStream cs3 = CharStreams.fromString(input3);
+        RNApolisLexer lexer3 = new RNApolisLexer(cs3);
+        CommonTokenStream tokens3 = new CommonTokenStream(lexer3);
+        RNApolisParser parser3 = new RNApolisParser(tokens3);
+        ParseTree tree3 = parser3.rnapolisFile(); // parse
+        RNApolisParserCustomListener listener3 = new RNApolisParserCustomListener();
+        ParseTreeWalker.DEFAULT.walk(listener3, tree3);
+        System.out.println(listener3.getStructures().toString());
+
 
 
         String input = """
