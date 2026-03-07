@@ -1,7 +1,10 @@
 package it.unicam.cs.bdslab.rna2dunifier;
 
+import it.unicam.cs.bdslab.barnaba.BarnabaLexer;
+import it.unicam.cs.bdslab.barnaba.BarnabaParser;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewParserCustomListener;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisLexer;
 import it.unicam.cs.bdslab.rnapolis.RNApolisParser;
 import it.unicam.cs.bdslab.rnapolis.RNApolisParserListener;
@@ -31,10 +34,9 @@ public class Main {
         System.out.println(listener.getStructures().toString());
         */
 
+
         String input = """
-                PDB data file name: /data/preprocessed/4PLX_A.pdb_new
-                uncommon residue GTP    1  on chain A [#1] assigned to: g
-                uncommon residue A23   76  on chain A [#76] assigned to: a
+                PDB data file name: /data/preprocessed/2K95_A.pdb_new
                 -----------------------------------------------------------
                 CRITERIA USED TO GENERATE BASE-PAIR:\s
                   3.40 --> upper H-bond length limits (ON..ON).
@@ -69,73 +71,63 @@ public class Main {
                 Yang et al (2003) Nucleic Acids Research, Vol31,No13,p3450-3461.
                 -----------------------------------------------------------
                 BEGIN_base-pair
-                     2_54, A:     2 G-U    54 A: W/W cis         XXVIII
-                     3_53, A:     3 A-U    53 A: -/- cis         XX
-                     4_52, A:     4 A-U    52 A: -/- cis         XX
-                     5_51, A:     5 G-C    51 A: +/+ cis         XIX
-                     6_50, A:     6 G-C    50 A: +/+ cis         XIX
-                     6_65, A:     6 G-A    65 A: S/S tran        n/a
-                     7_66, A:     7 U-A    66 A: W/H cis         XXIII
-                     8_67, A:     8 U-A    67 A: W/H cis         XXIII
-                     9_68, A:     9 U-A    68 A: W/H cis         XXIII
-                    10_69, A:    10 U-A    69 A: W/H cis         XXIII
-                    11_70, A:    11 U-A    70 A: S/H cis         n/a
-                    12_71, A:    12 C-G    71 A: S/H cis         n/a
-                    13_73, A:    13 U-A    73 A: W/H cis         XXIII
-                    14_74, A:    14 U-A    74 A: W/H cis         XXIII
-                    15_74, A:    15 U-A    74 A:      stacked
-                    15_75, A:    15 U-A    75 A: S/H cis         n/a
-                    16_75, A:    16 U-A    75 A:      stacked
-                    16_76, A:    16 U-a    76 A: W/H cis         XXIII
-                    17_36, A:    17 C-G    36 A: +/+ cis         XIX
-                    18_35, A:    18 C-G    35 A: +/+ cis         XIX
-                    19_34, A:    19 U-A    34 A: -/- cis         XX
-                    20_33, A:    20 G-C    33 A: +/+ cis         XIX
-                    21_32, A:    21 A-U    32 A: -/- cis         XX
-                    22_31, A:    22 G-C    31 A: +/+ cis         XIX
-                    23_30, A:    23 G-U    30 A: W/W cis         XXVIII
-                    24_29, A:    24 C-G    29 A: +/+ cis         XIX
-                    25_28, A:    25 G-A    28 A: S/H tran        XI
-                    27_28, A:    27 A-A    28 A:      stacked
-                    37_76, A:    37 U-a    76 A: -/- cis         XX
-                    38_75, A:    38 U-A    75 A: -/- cis         XX
-                    39_74, A:    39 U-A    74 A: -/- cis         XX
-                    40_73, A:    40 U-A    73 A: -/- cis         XX
-                    41_72, A:    41 G-C    72 A: +/+ cis         XIX
-                    42_71, A:    42 C-G    71 A: +/+ cis         XIX
-                    43_70, A:    43 U-A    70 A: -/- cis         XX
-                    44_69, A:    44 U-A    69 A: -/- cis         XX
-                    45_68, A:    45 U-A    68 A: -/- cis         XX
-                    46_67, A:    46 U-A    67 A: -/- cis         XX
-                    47_66, A:    47 U-A    66 A: -/- cis         XX
-                    64_65, A:    64 A-A    65 A:      stacked
-                     4_60, A:     4 A-A    60 A: S/. tran        !(b_s)
-                    49_50, A:    49 G-C    50 A: S/H cis         !(s_s)
-                    50_65, A:    50 C-A    65 A: S/s cis         !(s_s)
-                    51_64, A:    51 C-A    64 A: s/S cis         !(s_s)
+                     1_29, A:    93 G-C   121 A: +/+ cis         XIX
+                     2_28, A:    94 G-C   120 A: +/+ cis         XIX
+                     3_27, A:    95 G-C   119 A: +/+ cis         XIX
+                     3_28, A:    95 G-C   120 A:      stacked
+                     4_26, A:    96 C-G   118 A: +/+ cis         XIX
+                     5_25, A:    97 U-A   117 A: -/- cis         XX
+                     5_35, A:    97 U-A   171 A: S/H cis         n/a
+                      6_7, A:    98 G-U    99 A: S/S cis         n/a
+                     6_24, A:    98 G-C   116 A: +/+ cis         XIX
+                     6_36, A:    98 G-A   172 A: S/H tran        XI
+                     7_36, A:    99 U-A   172 A:      stacked
+                     7_37, A:    99 U-A   173 A: W/H cis         XXIII
+                     8_38, A:   100 U-A   174 A: W/H cis         XXIII
+                     9_39, A:   101 U-A   175 A: W/H cis         XXIII
+                    10_40, A:   102 U-A   176 A: W/H cis         XXIII
+                    15_47, A:   107 G-C   183 A: +/+ cis         XIX
+                    16_46, A:   108 C-G   182 A: +/+ cis         XIX
+                    17_45, A:   109 U-A   181 A: -/- cis         XX
+                    18_44, A:   110 G-C   180 A: +/+ cis         XIX
+                    19_43, A:   111 A-U   179 A: -/- cis         XX
+                    20_42, A:   112 C-G   178 A: +/+ cis         XIX
+                    21_40, A:   113 U-A   176 A: -/- cis         XX
+                    22_39, A:   114 U-A   175 A: -/- cis         XX
+                    23_38, A:   115 U-A   174 A: -/- cis         XX
+                    26_33, A:   118 G-A   169 A: S/H tran        XI
+                    31_32, A:   167 A-A   168 A:      stacked
+                    33_34, A:   169 A-C   170 A:      stacked
+                    11_20, A:   103 U-C   112 A: H/W cis         !1H(b_b)
+                    12_19, A:   104 C-A   111 A: S/H tran        !1H(b_b)
+                    24_37, A:   116 C-A   173 A: S/W cis         !1H(b_b)
+                     4_33, A:    96 C-A   169 A: S/H cis         !(s_s)
+                    12_14, A:   104 C-C   106 A: S/S tran        !(s_s)
+                    14_44, A:   106 C-C   180 A: H/. tran        !(s_s)
+                    25_35, A:   117 A-A   171 A: S/W cis         !(s_s)
+                    28_32, A:   120 C-A   168 A: S/S cis         !(s_s)
+                    29_31, A:   121 C-A   167 A: S/S tran        !(s_s)
+                    32_33, A:   168 A-A   169 A: S/H tran        !(s_s)
+                    36_37, A:   172 A-A   173 A: S/S cis         !(s_s)
                 END_base-pair
                 
                 Summary of triplets and higher multiplets
                 BEGIN_multiplets
-                6_50_65_| [1 3]  A: 6 G  +  A: 50 C  +  A: 65 A
-                7_47_66_| [2 3]  A: 7 U  +  A: 47 U  +  A: 66 A
-                8_46_67_| [3 3]  A: 8 U  +  A: 46 U  +  A: 67 A
-                9_45_68_| [4 3]  A: 9 U  +  A: 45 U  +  A: 68 A
-                10_44_69_| [5 3]  A: 10 U  +  A: 44 U  +  A: 69 A
-                11_43_70_| [6 3]  A: 11 U  +  A: 43 U  +  A: 70 A
-                12_42_71_| [7 3]  A: 12 C  +  A: 42 C  +  A: 71 G
-                13_40_73_| [8 3]  A: 13 U  +  A: 40 U  +  A: 73 A
-                14_39_74_| [9 3]  A: 14 U  +  A: 39 U  +  A: 74 A
-                15_38_75_| [10 3]  A: 15 U  +  A: 38 U  +  A: 75 A
-                16_37_76_| [11 3]  A: 16 U  +  A: 37 U  +  A: 76 a
+                4_26_33_| [1 3]  A: 96 C  +  A: 118 G  +  A: 169 A
+                5_25_35_| [2 3]  A: 97 U  +  A: 117 A  +  A: 171 A
+                6_7_24_37_| [3 4]  A: 98 G  +  A: 99 U  +  A: 116 C  +  A: 173 A
+                8_23_38_| [4 3]  A: 100 U  +  A: 115 U  +  A: 174 A
+                9_22_39_| [5 3]  A: 101 U  +  A: 114 U  +  A: 175 A
+                10_21_40_| [6 3]  A: 102 U  +  A: 113 U  +  A: 176 A
+                6_24_36_37_| [7 4]  A: 98 G  +  A: 116 C  +  A: 172 A  +  A: 173 A
                 END_multiplets
                 
-                  The total base pairs =  36 (from   76 bases)
+                  The total base pairs =  23 (from   48 bases)
                 ------------------------------------------------
                  Standard  WW--cis  WW-tran  HH--cis  HH-tran  SS--cis  SS-tran
-                       22        2        0        0        0        0        1
+                       15        0        0        0        0        1        0
                   WH--cis  WH-tran  WS--cis  WS-tran  HS--cis  HS-tran
-                        7        0        0        0        3        1
+                        4        0        0        0        1        2
                 ------------------------------------------------
                 """;
         CharStream cs = CharStreams.fromString(input);
@@ -146,5 +138,56 @@ public class Main {
         RNAviewParserCustomListener listener = new RNAviewParserCustomListener();
         ParseTreeWalker.DEFAULT.walk(listener, tree);
         System.out.println(listener.getStructure().toString());
+
+
+        String input2 = """
+                # ./barnaba/bin/barnaba ANNOTATE --pdb /data/preprocessed/2K95_A.pdb\s
+                #RES1       RES2       ANNO\s
+                # PDB 2K95_A.pdb\s
+                # sequence G_93_0-G_94_0-G_95_0-C_96_0-U_97_0-G_98_0-U_99_0-U_100_0-U_101_0-U_102_0-U_103_0-C_104_0-U_105_0-C_106_0-G_107_0-C_108_0-U_109_0-G_110_0-A_111_0-C_112_0-U_113_0-U_114_0-U_115_0-C_116_0-A_117_0-G_118_0-C_119_0-C_120_0-C_121_0-C_166_0-A_167_0-A_168_0-A_169_0-C_170_0-A_171_0-A_172_0-A_173_0-A_174_0-A_175_0-A_176_0-U_177_0-G_178_0-U_179_0-C_180_0-A_181_0-G_182_0-C_183_0-A_184_0
+                G_93_0     C_121_0     WCc\s
+                G_94_0     C_120_0     WCc\s
+                G_94_0     A_168_0     XXX\s
+                G_95_0     C_119_0     WCc\s
+                G_95_0     A_168_0     XXX\s
+                C_96_0     G_118_0     WCc\s
+                U_97_0     A_117_0     WCc\s
+                U_97_0     A_171_0     SHc\s
+                G_98_0     U_99_0      SHc\s
+                G_98_0     C_116_0     WCc\s
+                G_98_0     A_172_0     SWc\s
+                U_99_0     A_173_0     WHc\s
+                U_100_0    A_174_0     WHc\s
+                U_101_0    A_175_0     WHc\s
+                U_102_0    A_176_0     XXX\s
+                U_103_0    G_178_0     XXX\s
+                C_104_0    G_110_0     WHc\s
+                C_104_0    A_111_0     WHc\s
+                C_104_0    U_179_0     XXX\s
+                C_104_0    C_180_0     SHc\s
+                U_105_0    A_181_0     XXX\s
+                U_105_0    C_183_0     XXX\s
+                G_107_0    C_183_0     WCc\s
+                C_108_0    G_182_0     WCc\s
+                U_109_0    A_181_0     WCc\s
+                G_110_0    C_180_0     WCc\s
+                A_111_0    U_179_0     WCc\s
+                C_112_0    G_178_0     WCc\s
+                U_113_0    A_176_0     WCc\s
+                U_114_0    A_175_0     WCc\s
+                U_115_0    A_174_0     WCc\s
+                C_116_0    A_173_0     SWc\s
+                A_117_0    A_171_0     XXX\s
+                G_118_0    A_169_0     SHc\s
+                A_172_0    A_173_0     SHc\s
+                """;
+        CharStream cs2 = CharStreams.fromString(input2);
+        BarnabaLexer lexer2 = new BarnabaLexer(cs2);
+        CommonTokenStream tokens2 = new CommonTokenStream(lexer2);
+        BarnabaParser parser2 = new BarnabaParser(tokens2);
+        ParseTree tree2 = parser2.barnabaFile(); // parse
+        BarnabaParserCustomListener listener2 = new BarnabaParserCustomListener();
+        ParseTreeWalker.DEFAULT.walk(listener2, tree2);
+        System.out.println(listener2.getStructure().toString());
     }
 }
