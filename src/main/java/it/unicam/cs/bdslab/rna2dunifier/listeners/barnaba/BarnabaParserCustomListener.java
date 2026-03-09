@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class BarnabaParserCustomListener implements BarnabaParserListener {
+
     private ExtendedRNASecondaryStructure structure;
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
 
@@ -44,7 +45,7 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
 
     @Override
     public void enterFileName(BarnabaParser.FileNameContext ctx) {
-        structureBuilder = structureBuilder.addHeaderInfo("File", ctx.FILE_NAME().getText());
+        structureBuilder = structureBuilder.addHeaderInfo("File name", ctx.FILE_NAME().getText());
     }
 
     @Override
@@ -84,13 +85,12 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
             differencePosition = elPosition;
             lastPosition = elPosition;
         }
-        /*
-         * Questo blocco toglie il salto presente nella sequenza
-         * GGGCUGUUUUUCUCGCUGACUUUCAGCCC       CAAACAAAAAAUGUCAGCA
-         * diventa:
-         * GGGCUGUUUUUCUCGCUGACUUUCAGCCCCAAACAAAAAAUGUCAGCA
-         */
         else if(elPosition - lastPosition > 1) {
+            /*
+             * Remove the jump in the sequence
+             * from: GGGCUGUUUUUCUCGCUGACUUUCAGCCC       CAAACAAAAAAUGUCAGCA
+             * to:   GGGCUGUUUUUCUCGCUGACUUUCAGCCCCAAACAAAAAAUGUCAGCA
+             */
             differencePosition += elPosition-lastPosition-1;
             lastPosition = elPosition;
             i = elPosition-differencePosition;
@@ -100,15 +100,15 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
             i = elPosition-differencePosition;
         }
 
-        nucleotidePositionMap.put(elPosition, i);
+        nucleotidePositionMap.put(elPosition, i+1); // +1 (1-index)
         appendNucleotide(ctx.S_IUPAC_CODE().getText(), i);
     }
 
     private void appendNucleotide(String nucleotide, int index) {
-        while (sequence.size() <= index) {
+        while (sequence.size() < index) {
             sequence.add(" ");
         }
-        sequence.set(index, nucleotide);
+        sequence.add(nucleotide);
     }
 
     @Override
@@ -120,21 +120,23 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
     public void enterInteraction(BarnabaParser.InteractionContext ctx) {
         currentResidue1 = null;
         currentResidue2 = null;
-        currentBondType = null;
 
-        String annotation = ctx.ANNOTATION().getText();
+        getBondType(ctx.ANNOTATION().getText());
+    }
+
+    private void getBondType(String annotation) {
         if(annotation.matches("[<>][<>]")) {
             currentBondType = "stacking";
         } else {
             String pairs = annotation.substring(0, 2);
             if(pairs.equals("WC") || pairs.equals("GU")) {
+                // WWc pairs between complementary bases are called WCc or GUc.
                 annotation = annotation.replace(pairs, "WW");
             }
             String lastChar = annotation.substring(annotation.length() - 1);
             String prefix = annotation.substring(0, annotation.length() - 1);
             currentBondType = lastChar + prefix;
         }
-
     }
 
     @Override

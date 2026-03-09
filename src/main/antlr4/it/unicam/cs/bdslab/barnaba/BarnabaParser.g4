@@ -1,3 +1,13 @@
+/**
+ * ANTLR 4 parser grammar for barnaba output files.
+ *
+ * This parser defines the grammar for processing barnaba output files,
+ * building upon the tokens defined in BarnabaLexer. It structures the input
+ * into file information, sequence data, and residue interactions.
+ *
+ * @author Francesco Palozzi
+ * @see BarnabaLexer
+ */
 parser grammar BarnabaParser;
 
 options {

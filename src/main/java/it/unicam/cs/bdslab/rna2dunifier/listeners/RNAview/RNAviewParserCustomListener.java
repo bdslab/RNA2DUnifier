@@ -23,8 +23,8 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
 
     @Override
     public void enterRnaviewFile(RNAviewParser.RnaviewFileContext ctx) {
-        structureBuilder = new ExtendedRNASecondaryStructure.Builder();
-        structureBuilder = structureBuilder.addHeaderInfo("File name", ctx.FILE_NAME().getText());
+        structureBuilder = new ExtendedRNASecondaryStructure.Builder()
+                .addHeaderInfo("File name", ctx.FILE_NAME().getText());
     }
 
     @Override
@@ -47,9 +47,7 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
     @Override
     public void enterBase_numbers(RNAviewParser.Base_numbersContext ctx) {
         currentPairBuilder = currentPairBuilder
-                .setPos1(Integer.parseInt(ctx.NUMBER().getFirst().getText()));
-
-        currentPairBuilder = currentPairBuilder
+                .setPos1(Integer.parseInt(ctx.NUMBER().getFirst().getText()))
                 .setPos2(Integer.parseInt(ctx.NUMBER().getLast().getText()));
     }
 
@@ -82,8 +80,9 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
     public void enterBase_pair(RNAviewParser.Base_pairContext ctx) {
         String nucleotide1 = ctx.BASE_PAIR().getText().substring(0,1);
         String nucleotide2 = ctx.BASE_PAIR().getText().substring(2,3);
-        currentPairBuilder = currentPairBuilder.setNucleotide1(nucleotide1);
-        currentPairBuilder = currentPairBuilder.setNucleotide2(nucleotide2);
+        currentPairBuilder = currentPairBuilder
+                .setNucleotide1(nucleotide1)
+                .setNucleotide2(nucleotide2);
     }
 
     @Override
@@ -94,10 +93,8 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
     @Override
     public void enterPair(RNAviewParser.PairContext ctx) {
         currentPairBuilder = currentPairBuilder.setType(
-                getType(
-                        ctx.BASE_PAIR_ANNOTATION().getText().strip(),
-                        ctx.ORIENTATION().getText()
-                )
+                getType(ctx.BASE_PAIR_ANNOTATION().getText().strip(),
+                        ctx.ORIENTATION().getText())
         );
     }
 
@@ -156,7 +153,7 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
         }
 
         if(edge1.equals(edge2)) {
-            if(edge1.equals("-") || edge1.equals("+"))
+            if(edge1.matches("[-+]"))
                 return BondType.fromString(o+"WW");
         }
 

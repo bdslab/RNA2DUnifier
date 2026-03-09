@@ -56,7 +56,7 @@ CHAIN: [A-Z];
 
 PAIR_ANNOTATION: [sSWH+-.?];
 
-NUMBER: [1-9]+[0-9]*;
+NUMBER: [1-9][0-9]*;
 
 BASE_PAIR: IUPAC_CODE'-'IUPAC_CODE;
 
