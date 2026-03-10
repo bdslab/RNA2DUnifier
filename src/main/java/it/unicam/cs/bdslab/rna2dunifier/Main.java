@@ -2,12 +2,14 @@ package it.unicam.cs.bdslab.rna2dunifier;
 
 import it.unicam.cs.bdslab.barnaba.BarnabaLexer;
 import it.unicam.cs.bdslab.barnaba.BarnabaParser;
+import it.unicam.cs.bdslab.fr3d.Fr3dLexer;
+import it.unicam.cs.bdslab.fr3d.Fr3dParser;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomListener;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.Fr3dParserCustomListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisLexer;
 import it.unicam.cs.bdslab.rnapolis.RNApolisParser;
-import it.unicam.cs.bdslab.rnapolis.RNApolisParserListener;
 import it.unicam.cs.bdslab.rnaview.RNAviewLexer;
 import it.unicam.cs.bdslab.rnaview.RNAviewParser;
 import org.antlr.v4.runtime.*;
@@ -189,5 +191,263 @@ public class Main {
         BarnabaParserCustomListener listener2 = new BarnabaParserCustomListener();
         ParseTreeWalker.DEFAULT.walk(listener2, tree2);
         System.out.println(listener2.getStructure().toString());
+
+
+        String input4 = """
+                {
+                  "pdb_id": "2K95_A",
+                  "chain_id": "A",
+                  "modified": [],
+                  "annotations": [
+                    {
+                      "seq_id1": "111",
+                      "3d_id1": "111",
+                      "nt1": "A",
+                      "unit1": "A",
+                      "bp": "cWW",
+                      "seq_id2": "179",
+                      "nt2": "U",
+                      "unit2": "U",
+                      "3d_id2": "179",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "112",
+                      "3d_id1": "112",
+                      "nt1": "C",
+                      "unit1": "C",
+                      "bp": "cWW",
+                      "seq_id2": "178",
+                      "nt2": "G",
+                      "unit2": "G",
+                      "3d_id2": "178",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "113",
+                      "3d_id1": "113",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWW",
+                      "seq_id2": "176",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "176",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "114",
+                      "3d_id1": "114",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWW",
+                      "seq_id2": "175",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "175",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "97",
+                      "3d_id1": "97",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWW",
+                      "seq_id2": "117",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "117",
+                      "crossing": "0"
+                    },
+                    {
+                      "seq_id1": "98",
+                      "3d_id1": "98",
+                      "nt1": "G",
+                      "unit1": "G",
+                      "bp": "cWW",
+                      "seq_id2": "116",
+                      "nt2": "C",
+                      "unit2": "C",
+                      "3d_id2": "116",
+                      "crossing": "0"
+                    },
+                    {
+                      "seq_id1": "115",
+                      "3d_id1": "115",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWW",
+                      "seq_id2": "174",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "174",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "96",
+                      "3d_id1": "96",
+                      "nt1": "C",
+                      "unit1": "C",
+                      "bp": "cWW",
+                      "seq_id2": "118",
+                      "nt2": "G",
+                      "unit2": "G",
+                      "3d_id2": "118",
+                      "crossing": "0"
+                    },
+                    {
+                      "seq_id1": "110",
+                      "3d_id1": "110",
+                      "nt1": "G",
+                      "unit1": "G",
+                      "bp": "cWW",
+                      "seq_id2": "180",
+                      "nt2": "C",
+                      "unit2": "C",
+                      "3d_id2": "180",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "109",
+                      "3d_id1": "109",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWW",
+                      "seq_id2": "181",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "181",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "107",
+                      "3d_id1": "107",
+                      "nt1": "G",
+                      "unit1": "G",
+                      "bp": "cWW",
+                      "seq_id2": "183",
+                      "nt2": "C",
+                      "unit2": "C",
+                      "3d_id2": "183",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "94",
+                      "3d_id1": "94",
+                      "nt1": "G",
+                      "unit1": "G",
+                      "bp": "cWW",
+                      "seq_id2": "120",
+                      "nt2": "C",
+                      "unit2": "C",
+                      "3d_id2": "120",
+                      "crossing": "0"
+                    },
+                    {
+                      "seq_id1": "93",
+                      "3d_id1": "93",
+                      "nt1": "G",
+                      "unit1": "G",
+                      "bp": "cWW",
+                      "seq_id2": "121",
+                      "nt2": "C",
+                      "unit2": "C",
+                      "3d_id2": "121",
+                      "crossing": "0"
+                    },
+                    {
+                      "seq_id1": "95",
+                      "3d_id1": "95",
+                      "nt1": "G",
+                      "unit1": "G",
+                      "bp": "cWW",
+                      "seq_id2": "119",
+                      "nt2": "C",
+                      "unit2": "C",
+                      "3d_id2": "119",
+                      "crossing": "0"
+                    },
+                    {
+                      "seq_id1": "108",
+                      "3d_id1": "108",
+                      "nt1": "C",
+                      "unit1": "C",
+                      "bp": "cWW",
+                      "seq_id2": "182",
+                      "nt2": "G",
+                      "unit2": "G",
+                      "3d_id2": "182",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "116",
+                      "3d_id1": "116",
+                      "nt1": "C",
+                      "unit1": "C",
+                      "bp": "cSW",
+                      "seq_id2": "173",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "173",
+                      "crossing": "5"
+                    },
+                    {
+                      "seq_id1": "102",
+                      "3d_id1": "102",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWH",
+                      "seq_id2": "176",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "176",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "101",
+                      "3d_id1": "101",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWH",
+                      "seq_id2": "175",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "175",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "99",
+                      "3d_id1": "99",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWH",
+                      "seq_id2": "173",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "173",
+                      "crossing": "6"
+                    },
+                    {
+                      "seq_id1": "100",
+                      "3d_id1": "100",
+                      "nt1": "U",
+                      "unit1": "U",
+                      "bp": "cWH",
+                      "seq_id2": "174",
+                      "nt2": "A",
+                      "unit2": "A",
+                      "3d_id2": "174",
+                      "crossing": "6"
+                    }
+                  ]
+                }""";
+        CharStream cs4 = CharStreams.fromString(input4);
+        Fr3dLexer lexer4 = new Fr3dLexer(cs4);
+        CommonTokenStream tokens4 = new CommonTokenStream(lexer4);
+        Fr3dParser parser4 = new Fr3dParser(tokens4);
+        ParseTree tree4 = parser4.fr3dFile(); // parse
+        Fr3dParserCustomListener listener4 = new Fr3dParserCustomListener();
+        ParseTreeWalker.DEFAULT.walk(listener4, tree4);
+        System.out.println(listener4.getStructure());
     }
 }

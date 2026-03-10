@@ -6,9 +6,9 @@ pdb_id: string_pair ',';
 
 chain_id: string_pair ',';
 
-modified: '"modified":' '[' object (',' object)* '],' | '[' '],';
+modified: '"modified":' ('[' object (',' object)* '],' | '[' '],');
 
-annotations: '"annotations":' '[' object (',' object)* ']' | '[' ']';
+annotations: '"annotations":' ('[' object (',' object)* ']' | '[' ']');
 
 object: '{' string_pair (',' string_pair)* '}';
 
