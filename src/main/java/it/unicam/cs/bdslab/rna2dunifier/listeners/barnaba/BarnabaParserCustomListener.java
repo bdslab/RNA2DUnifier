@@ -100,7 +100,7 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
             i = elPosition-differencePosition;
         }
 
-        nucleotidePositionMap.put(elPosition, i+1); // +1 (1-index)
+        nucleotidePositionMap.put(elPosition, i); // 0-index
         appendNucleotide(ctx.S_IUPAC_CODE().getText(), i);
     }
 

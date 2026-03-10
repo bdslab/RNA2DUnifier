@@ -47,8 +47,8 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
     @Override
     public void enterBase_numbers(RNAviewParser.Base_numbersContext ctx) {
         currentPairBuilder = currentPairBuilder
-                .setPos1(Integer.parseInt(ctx.NUMBER().getFirst().getText()))
-                .setPos2(Integer.parseInt(ctx.NUMBER().getLast().getText()));
+                .setPos1(Integer.parseInt(ctx.NUMBER().getFirst().getText())-1)
+                .setPos2(Integer.parseInt(ctx.NUMBER().getLast().getText())-1); // 0-index
     }
 
     @Override
