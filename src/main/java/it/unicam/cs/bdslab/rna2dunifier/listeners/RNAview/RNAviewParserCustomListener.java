@@ -157,6 +157,6 @@ public class RNAviewParserCustomListener implements RNAviewParserListener {
                 return BondType.fromString(o+"WW");
         }
 
-        return BondType.fromString(o+edge1.toUpperCase()+edge2.toUpperCase());
+        return BondType.fromString(o+edge1+edge2);
     }
 }
