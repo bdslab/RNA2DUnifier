@@ -4,10 +4,13 @@ import it.unicam.cs.bdslab.barnaba.BarnabaLexer;
 import it.unicam.cs.bdslab.barnaba.BarnabaParser;
 import it.unicam.cs.bdslab.fr3d.Fr3dLexer;
 import it.unicam.cs.bdslab.fr3d.Fr3dParser;
+import it.unicam.cs.bdslab.mcannotate.McAnnotateLexer;
+import it.unicam.cs.bdslab.mcannotate.McAnnotateParser;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.Fr3dParserCustomListener;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateParserCustomListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisLexer;
 import it.unicam.cs.bdslab.rnapolis.RNApolisParser;
 import it.unicam.cs.bdslab.rnaview.RNAviewLexer;
@@ -17,16 +20,7 @@ import org.antlr.v4.runtime.tree.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String input3 = """
-                >strand_A
-                seq GGGCUGUUUUUCUCGCUGACUUUCAGCCCCAAACAAAAAAUGUCAGCA
-                cWW [[[[[[........(((((((((]]]]]]........))).)))))).
-                cWH ......<{([..........................>})]........
-                cSH ....(()....[.........()..(......).)....()..]....
-                cSH ......()........................................
-                tHH ............(................................)..
-                """;
-        CharStream cs3 = CharStreams.fromString(input3);
+        CharStream cs3 = CharStreams.fromFileName("src/main/resources/rna-output/rnapolis/2K95_A.3db");
         RNApolisLexer lexer3 = new RNApolisLexer(cs3);
         CommonTokenStream tokens3 = new CommonTokenStream(lexer3);
         RNApolisParser parser3 = new RNApolisParser(tokens3);
@@ -35,104 +29,7 @@ public class Main {
         ParseTreeWalker.DEFAULT.walk(listener3, tree3);
         System.out.println(listener3.getStructures().toString());
 
-
-
-        String input = """
-                PDB data file name: /data/preprocessed/2K95_A.pdb_new
-                -----------------------------------------------------------
-                CRITERIA USED TO GENERATE BASE-PAIR:\s
-                  3.40 --> upper H-bond length limits (ON..ON).
-                 26.00 --> max. distance between paired base origins.
-                  2.50 --> max. vertical distance between paired base origins.
-                 65.00 --> max. angle between paired bases [0-90].
-                  5.40 --> min. distance between RN9/YN1 atoms.
-                  8.00 --> max. distance criterion for helix break[0-12]
-                -----------------------------------------------------------
-                BASE-PAIR INSTRUCTIONS:\s
-                Column 1 is rnaview assigned base numbers n1_n2, start from 1.
-                Column 2 & 3 are chain ID & residue number in input PDB file.
-                Column 4 is for base pair. The left & right are the bases as\s
-                         identified by column 2 & 3 and 5 & 6.
-                Column 5 & 6 are residue number & chain ID in input PDB file.
-                Column 7 is for base pair annotation. The standard Watson-Crick
-                         (W.C.) pairs are annotated as -/- (AU,AT) or +/+ (GC).
-                         Other pairs are annotated as Leontis_Westhof Classification.
-                         The three edges: W(Watson-Crick); H(Hoogsteen); S(suger).
-                         e.g. W/H means the pair is edge of Watson-Crick & Hoogsteen.
-                Column 8 is glycosidic bond orientation (either cis or trans).
-                         e.g. 'W/H cis' means the pair is interaction on Watson-Crick
-                         and Hoogsteen side, glycosidic bond orientation is 'cis'.
-                Column 9 corresponds to Saenger Classification.
-                
-                Other columns:\s
-                        Syn sugar-base conformations are annotated as (syn).
-                        Stacked base pairs are annotated as (stack).
-                        Non-identified edges are annotated as (.) or (?)
-                        Tertiary interactions are marked by (!) in the line.
-                Reference:
-                Yang et al (2003) Nucleic Acids Research, Vol31,No13,p3450-3461.
-                -----------------------------------------------------------
-                BEGIN_base-pair
-                     1_29, A:    93 G-C   121 A: +/+ cis         XIX
-                     2_28, A:    94 G-C   120 A: +/+ cis         XIX
-                     3_27, A:    95 G-C   119 A: +/+ cis         XIX
-                     3_28, A:    95 G-C   120 A:      stacked
-                     4_26, A:    96 C-G   118 A: +/+ cis         XIX
-                     5_25, A:    97 U-A   117 A: -/- cis         XX
-                     5_35, A:    97 U-A   171 A: S/H cis         n/a
-                      6_7, A:    98 G-U    99 A: S/S cis         n/a
-                     6_24, A:    98 G-C   116 A: +/+ cis         XIX
-                     6_36, A:    98 G-A   172 A: S/H tran        XI
-                     7_36, A:    99 U-A   172 A:      stacked
-                     7_37, A:    99 U-A   173 A: W/H cis         XXIII
-                     8_38, A:   100 U-A   174 A: W/H cis         XXIII
-                     9_39, A:   101 U-A   175 A: W/H cis         XXIII
-                    10_40, A:   102 U-A   176 A: W/H cis         XXIII
-                    15_47, A:   107 G-C   183 A: +/+ cis         XIX
-                    16_46, A:   108 C-G   182 A: +/+ cis         XIX
-                    17_45, A:   109 U-A   181 A: -/- cis         XX
-                    18_44, A:   110 G-C   180 A: +/+ cis         XIX
-                    19_43, A:   111 A-U   179 A: -/- cis         XX
-                    20_42, A:   112 C-G   178 A: +/+ cis         XIX
-                    21_40, A:   113 U-A   176 A: -/- cis         XX
-                    22_39, A:   114 U-A   175 A: -/- cis         XX
-                    23_38, A:   115 U-A   174 A: -/- cis         XX
-                    26_33, A:   118 G-A   169 A: S/H tran        XI
-                    31_32, A:   167 A-A   168 A:      stacked
-                    33_34, A:   169 A-C   170 A:      stacked
-                    11_20, A:   103 U-C   112 A: H/W cis         !1H(b_b)
-                    12_19, A:   104 C-A   111 A: S/H tran        !1H(b_b)
-                    24_37, A:   116 C-A   173 A: S/W cis         !1H(b_b)
-                     4_33, A:    96 C-A   169 A: S/H cis         !(s_s)
-                    12_14, A:   104 C-C   106 A: S/S tran        !(s_s)
-                    14_44, A:   106 C-C   180 A: H/. tran        !(s_s)
-                    25_35, A:   117 A-A   171 A: S/W cis         !(s_s)
-                    28_32, A:   120 C-A   168 A: S/S cis         !(s_s)
-                    29_31, A:   121 C-A   167 A: S/S tran        !(s_s)
-                    32_33, A:   168 A-A   169 A: S/H tran        !(s_s)
-                    36_37, A:   172 A-A   173 A: S/S cis         !(s_s)
-                END_base-pair
-                
-                Summary of triplets and higher multiplets
-                BEGIN_multiplets
-                4_26_33_| [1 3]  A: 96 C  +  A: 118 G  +  A: 169 A
-                5_25_35_| [2 3]  A: 97 U  +  A: 117 A  +  A: 171 A
-                6_7_24_37_| [3 4]  A: 98 G  +  A: 99 U  +  A: 116 C  +  A: 173 A
-                8_23_38_| [4 3]  A: 100 U  +  A: 115 U  +  A: 174 A
-                9_22_39_| [5 3]  A: 101 U  +  A: 114 U  +  A: 175 A
-                10_21_40_| [6 3]  A: 102 U  +  A: 113 U  +  A: 176 A
-                6_24_36_37_| [7 4]  A: 98 G  +  A: 116 C  +  A: 172 A  +  A: 173 A
-                END_multiplets
-                
-                  The total base pairs =  23 (from   48 bases)
-                ------------------------------------------------
-                 Standard  WW--cis  WW-tran  HH--cis  HH-tran  SS--cis  SS-tran
-                       15        0        0        0        0        1        0
-                  WH--cis  WH-tran  WS--cis  WS-tran  HS--cis  HS-tran
-                        4        0        0        0        1        2
-                ------------------------------------------------
-                """;
-        CharStream cs = CharStreams.fromString(input);
+        CharStream cs = CharStreams.fromFileName("src/main/resources/rna-output/rnaview/2K95_A.pdb.out");
         RNAviewLexer lexer = new RNAviewLexer(cs);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         RNAviewParser parser = new RNAviewParser(tokens);
@@ -141,49 +38,7 @@ public class Main {
         ParseTreeWalker.DEFAULT.walk(listener, tree);
         System.out.println(listener.getStructure().toString());
 
-
-        String input2 = """
-                # ./barnaba/bin/barnaba ANNOTATE --pdb /data/preprocessed/2K95_A.pdb\s
-                #RES1       RES2       ANNO\s
-                # PDB 2K95_A.pdb\s
-                # sequence G_93_0-G_94_0-G_95_0-C_96_0-U_97_0-G_98_0-U_99_0-U_100_0-U_101_0-U_102_0-U_103_0-C_104_0-U_105_0-C_106_0-G_107_0-C_108_0-U_109_0-G_110_0-A_111_0-C_112_0-U_113_0-U_114_0-U_115_0-C_116_0-A_117_0-G_118_0-C_119_0-C_120_0-C_121_0-C_166_0-A_167_0-A_168_0-A_169_0-C_170_0-A_171_0-A_172_0-A_173_0-A_174_0-A_175_0-A_176_0-U_177_0-G_178_0-U_179_0-C_180_0-A_181_0-G_182_0-C_183_0-A_184_0
-                G_93_0     C_121_0     WCc\s
-                G_94_0     C_120_0     WCc\s
-                G_94_0     A_168_0     XXX\s
-                G_95_0     C_119_0     WCc\s
-                G_95_0     A_168_0     XXX\s
-                C_96_0     G_118_0     WCc\s
-                U_97_0     A_117_0     WCc\s
-                U_97_0     A_171_0     SHc\s
-                G_98_0     U_99_0      SHc\s
-                G_98_0     C_116_0     WCc\s
-                G_98_0     A_172_0     SWc\s
-                U_99_0     A_173_0     WHc\s
-                U_100_0    A_174_0     WHc\s
-                U_101_0    A_175_0     WHc\s
-                U_102_0    A_176_0     XXX\s
-                U_103_0    G_178_0     XXX\s
-                C_104_0    G_110_0     WHc\s
-                C_104_0    A_111_0     WHc\s
-                C_104_0    U_179_0     XXX\s
-                C_104_0    C_180_0     SHc\s
-                U_105_0    A_181_0     XXX\s
-                U_105_0    C_183_0     XXX\s
-                G_107_0    C_183_0     WCc\s
-                C_108_0    G_182_0     WCc\s
-                U_109_0    A_181_0     WCc\s
-                G_110_0    C_180_0     WCc\s
-                A_111_0    U_179_0     WCc\s
-                C_112_0    G_178_0     WCc\s
-                U_113_0    A_176_0     WCc\s
-                U_114_0    A_175_0     WCc\s
-                U_115_0    A_174_0     WCc\s
-                C_116_0    A_173_0     SWc\s
-                A_117_0    A_171_0     XXX\s
-                G_118_0    A_169_0     SHc\s
-                A_172_0    A_173_0     SHc\s
-                """;
-        CharStream cs2 = CharStreams.fromString(input2);
+        CharStream cs2 = CharStreams.fromFileName("src/main/resources/rna-output/barnaba/2K95_A.pdb.ANNOTATE.pairing.out");
         BarnabaLexer lexer2 = new BarnabaLexer(cs2);
         CommonTokenStream tokens2 = new CommonTokenStream(lexer2);
         BarnabaParser parser2 = new BarnabaParser(tokens2);
@@ -192,256 +47,7 @@ public class Main {
         ParseTreeWalker.DEFAULT.walk(listener2, tree2);
         System.out.println(listener2.getStructure().toString());
 
-
-        String input4 = """
-                {
-                  "pdb_id": "2K95_A",
-                  "chain_id": "A",
-                  "modified": [],
-                  "annotations": [
-                    {
-                      "seq_id1": "111",
-                      "3d_id1": "111",
-                      "nt1": "A",
-                      "unit1": "A",
-                      "bp": "cWW",
-                      "seq_id2": "179",
-                      "nt2": "U",
-                      "unit2": "U",
-                      "3d_id2": "179",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "112",
-                      "3d_id1": "112",
-                      "nt1": "C",
-                      "unit1": "C",
-                      "bp": "cWW",
-                      "seq_id2": "178",
-                      "nt2": "G",
-                      "unit2": "G",
-                      "3d_id2": "178",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "113",
-                      "3d_id1": "113",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWW",
-                      "seq_id2": "176",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "176",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "114",
-                      "3d_id1": "114",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWW",
-                      "seq_id2": "175",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "175",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "97",
-                      "3d_id1": "97",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWW",
-                      "seq_id2": "117",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "117",
-                      "crossing": "0"
-                    },
-                    {
-                      "seq_id1": "98",
-                      "3d_id1": "98",
-                      "nt1": "G",
-                      "unit1": "G",
-                      "bp": "cWW",
-                      "seq_id2": "116",
-                      "nt2": "C",
-                      "unit2": "C",
-                      "3d_id2": "116",
-                      "crossing": "0"
-                    },
-                    {
-                      "seq_id1": "115",
-                      "3d_id1": "115",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWW",
-                      "seq_id2": "174",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "174",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "96",
-                      "3d_id1": "96",
-                      "nt1": "C",
-                      "unit1": "C",
-                      "bp": "cWW",
-                      "seq_id2": "118",
-                      "nt2": "G",
-                      "unit2": "G",
-                      "3d_id2": "118",
-                      "crossing": "0"
-                    },
-                    {
-                      "seq_id1": "110",
-                      "3d_id1": "110",
-                      "nt1": "G",
-                      "unit1": "G",
-                      "bp": "cWW",
-                      "seq_id2": "180",
-                      "nt2": "C",
-                      "unit2": "C",
-                      "3d_id2": "180",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "109",
-                      "3d_id1": "109",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWW",
-                      "seq_id2": "181",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "181",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "107",
-                      "3d_id1": "107",
-                      "nt1": "G",
-                      "unit1": "G",
-                      "bp": "cWW",
-                      "seq_id2": "183",
-                      "nt2": "C",
-                      "unit2": "C",
-                      "3d_id2": "183",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "94",
-                      "3d_id1": "94",
-                      "nt1": "G",
-                      "unit1": "G",
-                      "bp": "cWW",
-                      "seq_id2": "120",
-                      "nt2": "C",
-                      "unit2": "C",
-                      "3d_id2": "120",
-                      "crossing": "0"
-                    },
-                    {
-                      "seq_id1": "93",
-                      "3d_id1": "93",
-                      "nt1": "G",
-                      "unit1": "G",
-                      "bp": "cWW",
-                      "seq_id2": "121",
-                      "nt2": "C",
-                      "unit2": "C",
-                      "3d_id2": "121",
-                      "crossing": "0"
-                    },
-                    {
-                      "seq_id1": "95",
-                      "3d_id1": "95",
-                      "nt1": "G",
-                      "unit1": "G",
-                      "bp": "cWW",
-                      "seq_id2": "119",
-                      "nt2": "C",
-                      "unit2": "C",
-                      "3d_id2": "119",
-                      "crossing": "0"
-                    },
-                    {
-                      "seq_id1": "108",
-                      "3d_id1": "108",
-                      "nt1": "C",
-                      "unit1": "C",
-                      "bp": "cWW",
-                      "seq_id2": "182",
-                      "nt2": "G",
-                      "unit2": "G",
-                      "3d_id2": "182",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "116",
-                      "3d_id1": "116",
-                      "nt1": "C",
-                      "unit1": "C",
-                      "bp": "cSW",
-                      "seq_id2": "173",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "173",
-                      "crossing": "5"
-                    },
-                    {
-                      "seq_id1": "102",
-                      "3d_id1": "102",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWH",
-                      "seq_id2": "176",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "176",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "101",
-                      "3d_id1": "101",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWH",
-                      "seq_id2": "175",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "175",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "99",
-                      "3d_id1": "99",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWH",
-                      "seq_id2": "173",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "173",
-                      "crossing": "6"
-                    },
-                    {
-                      "seq_id1": "100",
-                      "3d_id1": "100",
-                      "nt1": "U",
-                      "unit1": "U",
-                      "bp": "cWH",
-                      "seq_id2": "174",
-                      "nt2": "A",
-                      "unit2": "A",
-                      "3d_id2": "174",
-                      "crossing": "6"
-                    }
-                  ]
-                }""";
-        CharStream cs4 = CharStreams.fromString(input4);
+        CharStream cs4 = CharStreams.fromFileName("src/main/resources/rna-output/fr3d/2K95_A_A_basepair.json");
         Fr3dLexer lexer4 = new Fr3dLexer(cs4);
         CommonTokenStream tokens4 = new CommonTokenStream(lexer4);
         Fr3dParser parser4 = new Fr3dParser(tokens4);
@@ -449,5 +55,14 @@ public class Main {
         Fr3dParserCustomListener listener4 = new Fr3dParserCustomListener();
         ParseTreeWalker.DEFAULT.walk(listener4, tree4);
         System.out.println(listener4.getStructure());
+
+        CharStream cs5 = CharStreams.fromFileName("src/main/resources/rna-output/mc-annotate/txt/2K95_A.txt");
+        McAnnotateLexer lexer5 = new McAnnotateLexer(cs5);
+        CommonTokenStream tokens5 = new CommonTokenStream(lexer5);
+        McAnnotateParser parser5 = new McAnnotateParser(tokens5);
+        ParseTree tree5 = parser5.mcAannotateFile(); // parse
+        McAnnotateParserCustomListener listener5 = new McAnnotateParserCustomListener();
+        ParseTreeWalker.DEFAULT.walk(listener5, tree5);
+        System.out.println(listener5.getStructure());
     }
 }
