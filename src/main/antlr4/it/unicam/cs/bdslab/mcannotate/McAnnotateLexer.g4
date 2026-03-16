@@ -18,7 +18,6 @@ lexer grammar McAnnotateLexer;
 fragment WS_CHAR: [ \t];
 fragment NEWLINE_CHAR: '\r'? '\n';
 fragment IUPAC_CODE: [ACGUacguTtRrYysSWwKkMmBbDdHhVvNn-];
-fragment NON_STANDARD_CODE: ["?]~[-+=/47P0I];
 fragment COLUMN: ':';
 
 

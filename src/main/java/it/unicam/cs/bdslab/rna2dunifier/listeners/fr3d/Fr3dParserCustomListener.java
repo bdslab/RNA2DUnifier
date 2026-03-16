@@ -63,9 +63,9 @@ public class Fr3dParserCustomListener implements Fr3dListener {
         inAnnotations = true;
         Set<Integer> positions = new HashSet<>();
 
+        // Create the positionMap
         ctx.object().forEach(obj -> {
-            obj.string_pair()
-                    .stream()
+            obj.string_pair().stream()
                     .filter(s ->
                             s.String().getFirst().getText().contains("seq_id1") ||
                             s.String().getFirst().getText().contains("seq_id2"))
