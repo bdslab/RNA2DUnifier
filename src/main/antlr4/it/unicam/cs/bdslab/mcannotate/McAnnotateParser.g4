@@ -23,7 +23,7 @@ options {
 mcAannotateFile: residueSection adjStackingSection nonAdjStackingSection basePairsSection EOF;
 
 residueSection: residueElement*;
-residueElement: STRAND_POSITION NUCLEOTIDE?;
+residueElement: STRAND_POSITION INFO+;
 
 adjStackingSection: adjStackingElement*;
 adjStackingElement: AS_STACK;

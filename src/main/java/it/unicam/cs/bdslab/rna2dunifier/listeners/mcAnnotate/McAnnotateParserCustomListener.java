@@ -45,11 +45,13 @@ public class McAnnotateParserCustomListener implements McAnnotateParserListener 
 
     @Override
     public void enterResidueElement(McAnnotateParser.ResidueElementContext ctx) {
-        if(ctx.NUCLEOTIDE() != null) {
-            sequence += (ctx.NUCLEOTIDE().getText());
-            int position = Integer.parseInt(ctx.STRAND_POSITION().getText().substring(1));
-            positionMap.put(position, positionMap.size());
-        }
+        String nucleotide = ctx.INFO().getFirst().getText();
+        nucleotide = nucleotide.length() > 1 ? nucleotide.substring(0,1).toLowerCase() : nucleotide;
+
+        sequence += (nucleotide);
+        int position = Integer.parseInt(ctx.STRAND_POSITION().getText().substring(1));
+        positionMap.put(position, positionMap.size());
+
     }
 
     @Override

@@ -51,8 +51,7 @@ mode RESIDUE_INFO;
 RI_WS: WS_CHAR+ -> skip;
 RI_NEWLINE: NEWLINE_CHAR -> skip, popMode, pushMode(RESIDUE_MODE);
 
-NUCLEOTIDE: IUPAC_CODE;
-INFO: [a-zA-Z0-9_]+ -> skip;
+INFO: [a-zA-Z0-9_]+;
 
 // ---------------------------------------------------------
 // Adjacent stackings mode - after 'Adjacent stackings ---'
