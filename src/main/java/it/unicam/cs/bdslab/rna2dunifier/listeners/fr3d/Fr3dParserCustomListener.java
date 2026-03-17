@@ -13,12 +13,13 @@ import java.util.*;
 
 public class Fr3dParserCustomListener implements Fr3dListener {
 
-    private ExtendedRNASecondaryStructure.Builder structureBuilder = new ExtendedRNASecondaryStructure.Builder();
+    private final ExtendedRNASecondaryStructure.Builder structureBuilder = new ExtendedRNASecondaryStructure.Builder();
     private Pair.Builder pairBuilder;
 
     private boolean inAnnotations = false;
 
-    Map<Integer, Integer> positionMap = new HashMap<>();
+    private final Set<Integer> positions = new HashSet<>();
+    private final Map<Integer, Integer> positionMap = new HashMap<>();
 
     public ExtendedRNASecondaryStructure getStructure() {
         return structureBuilder.build();
@@ -52,6 +53,7 @@ public class Fr3dParserCustomListener implements Fr3dListener {
 
     @Override
     public void enterModified(Fr3dParser.ModifiedContext ctx) {
+        addToPositions(ctx.object());
     }
 
     @Override
@@ -61,18 +63,7 @@ public class Fr3dParserCustomListener implements Fr3dListener {
     @Override
     public void enterAnnotations(Fr3dParser.AnnotationsContext ctx) {
         inAnnotations = true;
-        Set<Integer> positions = new HashSet<>();
-
-        // Create the positionMap
-        ctx.object().forEach(obj -> {
-            obj.string_pair().stream()
-                    .filter(s ->
-                            s.String().getFirst().getText().contains("seq_id1") ||
-                            s.String().getFirst().getText().contains("seq_id2"))
-                    .forEach(s -> {
-                        positions.add(Integer.parseInt(s.String().getLast().getText().replace("\"", "")));
-                    });
-        });
+        addToPositions(ctx.object());
 
         List<Integer> sortedPositions = new ArrayList<>(positions);
         Collections.sort(sortedPositions);
@@ -81,6 +72,19 @@ public class Fr3dParserCustomListener implements Fr3dListener {
         for(Integer position : sortedPositions) {
             positionMap.put(position, i++);
         }
+    }
+
+    private void addToPositions( List<Fr3dParser.ObjectContext> object) {
+        object.forEach(obj -> {
+            obj.string_pair().stream()
+                    .filter(s ->
+                            s.String().getFirst().getText().contains("seq_id1") ||
+                            s.String().getFirst().getText().contains("seq_id2") ||
+                            s.String().getFirst().getText().contains("seq_id"))
+                    .forEach(s -> {
+                        positions.add(Integer.parseInt(s.String().getLast().getText().replaceAll("\"", "")));
+                    });
+        });
     }
 
     @Override
@@ -108,7 +112,7 @@ public class Fr3dParserCustomListener implements Fr3dListener {
 
             String val = getVal(ctx);
 
-            switch (ctx.String().getFirst().getText().replace("\"", "")) {
+            switch (ctx.String().getFirst().getText().replaceAll("\"", "")) {
                 case "seq_id1":
                     pairBuilder.setPos1(positionMap.get(Integer.parseInt(val)));
                     break;
@@ -133,7 +137,7 @@ public class Fr3dParserCustomListener implements Fr3dListener {
     }
 
     private String getVal(Fr3dParser.String_pairContext ctx) {
-        return ctx.String().getLast().getText().replace("\"", "");
+        return ctx.String().getLast().getText().replaceAll("\"", "");
     }
 
     @Override
