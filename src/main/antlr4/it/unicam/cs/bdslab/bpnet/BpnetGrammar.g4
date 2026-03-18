@@ -26,5 +26,5 @@ WS: [ \t\r\n] -> skip;
 COMMENT: '#' ~[?#\n]+ -> skip;
 
 fragment IUPAC_CODE: [ACGUacguTtRrYysSWwKkMmBbDdHhVvNn];
-fragment EDGE: [WHSwhs+];
+fragment EDGE: [WHSwhszg+];
 fragment SYMBOL: [A-Za-z0-9];

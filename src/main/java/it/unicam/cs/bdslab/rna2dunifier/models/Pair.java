@@ -1,14 +1,16 @@
 package it.unicam.cs.bdslab.rna2dunifier.models;
 
+import java.util.Objects;
+
 /**
  * Represents a base pair in an RNA secondary structure,
  * including the position of the paired nucleotides, the type of bond, and optionally the nucleotides themselves.
  */
 public class Pair {
     
-    private int pos1;
-    private int pos2;
-    private BondType type;
+    private final int pos1;
+    private final int pos2;
+    private final BondType type;
     private String nucleotide1;
     private String nucleotide2;
 
@@ -83,6 +85,44 @@ public class Pair {
     @Override
     public String toString() {
         return "(" + type + " " + pos1 + ":" + nucleotide1 + " " + pos2 + ":" + nucleotide2 + ")";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o == null) return false;
+        if(!(o instanceof Pair pair)) return false;
+
+        if (pos1 == pair.getPos1() &&
+            pos2 == pair.getPos2() &&
+            nucleotide1.equals(pair.getNucleotide1()) &&
+            nucleotide2.equals(pair.getNucleotide2()) &&
+            type == pair.getType()) {
+            return true;
+        }
+
+        return  pos1 == pair.getPos2() &&
+                pos2 == pair.getPos1() &&
+                nucleotide1.equals(pair.getNucleotide2()) &&
+                nucleotide2.equals(pair.getNucleotide1()) &&
+                type == pair.getType();
+    }
+
+    @Override
+    public int hashCode() {
+        int p1 = Math.min(pos1, pos2);
+        int p2 = Math.max(pos1, pos2);
+
+        // Canonical order for nucleotides (e.g., lexicographic)
+        String n1, n2;
+        if (nucleotide1.compareTo(nucleotide2) <= 0) {
+            n1 = nucleotide1;
+            n2 = nucleotide2;
+        } else {
+            n1 = nucleotide2;
+            n2 = nucleotide1;
+        }
+
+        return Objects.hash(p1, p2, n1, n2, type);
     }
 
     public static class Builder {
