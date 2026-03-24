@@ -1,0 +1,226 @@
+{
+  "num_pairs": 22,
+  "pairs": [
+    {
+      "index": 1,
+      "nt1": "A.G1",
+      "nt2": "A.C29",
+      "bp": "G-C",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 2,
+      "nt1": "A.G2",
+      "nt2": "A.C28",
+      "bp": "G-C",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 3,
+      "nt1": "A.G3",
+      "nt2": "A.C27",
+      "bp": "G-C",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 4,
+      "nt1": "A.C4",
+      "nt2": "A.G26",
+      "bp": "C-G",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 5,
+      "nt1": "A.U5",
+      "nt2": "A.A25",
+      "bp": "U-A",
+      "name": "WC",
+      "Saenger": "20-XX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 6,
+      "nt1": "A.U5",
+      "nt2": "A.A35",
+      "bp": "U+A",
+      "name": "--",
+      "Saenger": "--",
+      "LW": "cSH",
+      "DSSR": "cm+M"
+    },
+    {
+      "index": 7,
+      "nt1": "A.G6",
+      "nt2": "A.C24",
+      "bp": "G-C",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 8,
+      "nt1": "A.G6",
+      "nt2": "A.A36",
+      "bp": "G+A",
+      "name": "--",
+      "Saenger": "10-X",
+      "LW": "tSW",
+      "DSSR": "tm+W"
+    },
+    {
+      "index": 9,
+      "nt1": "A.U7",
+      "nt2": "A.A37",
+      "bp": "U+A",
+      "name": "Hoogsteen",
+      "Saenger": "23-XXIII",
+      "LW": "cWH",
+      "DSSR": "cW+M"
+    },
+    {
+      "index": 10,
+      "nt1": "A.U8",
+      "nt2": "A.A38",
+      "bp": "U+A",
+      "name": "Hoogsteen",
+      "Saenger": "23-XXIII",
+      "LW": "cWH",
+      "DSSR": "cW+M"
+    },
+    {
+      "index": 11,
+      "nt1": "A.U9",
+      "nt2": "A.A39",
+      "bp": "U+A",
+      "name": "Hoogsteen",
+      "Saenger": "23-XXIII",
+      "LW": "cWH",
+      "DSSR": "cW+M"
+    },
+    {
+      "index": 12,
+      "nt1": "A.U10",
+      "nt2": "A.A40",
+      "bp": "U+A",
+      "name": "Hoogsteen",
+      "Saenger": "23-XXIII",
+      "LW": "cWH",
+      "DSSR": "cW+M"
+    },
+    {
+      "index": 13,
+      "nt1": "A.G15",
+      "nt2": "A.C46",
+      "bp": "G-C",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 14,
+      "nt1": "A.C16",
+      "nt2": "A.G45",
+      "bp": "C-G",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 15,
+      "nt1": "A.U17",
+      "nt2": "A.A44",
+      "bp": "U-A",
+      "name": "WC",
+      "Saenger": "20-XX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 16,
+      "nt1": "A.G18",
+      "nt2": "A.C43",
+      "bp": "G-C",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 17,
+      "nt1": "A.A19",
+      "nt2": "A.U42",
+      "bp": "A-U",
+      "name": "WC",
+      "Saenger": "20-XX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 18,
+      "nt1": "A.C20",
+      "nt2": "A.G41",
+      "bp": "C-G",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 19,
+      "nt1": "A.U21",
+      "nt2": "A.A40",
+      "bp": "U-A",
+      "name": "WC",
+      "Saenger": "20-XX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 20,
+      "nt1": "A.U22",
+      "nt2": "A.A39",
+      "bp": "U-A",
+      "name": "WC",
+      "Saenger": "20-XX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 21,
+      "nt1": "A.U23",
+      "nt2": "A.A38",
+      "bp": "U-A",
+      "name": "WC",
+      "Saenger": "20-XX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
+    },
+    {
+      "index": 22,
+      "nt1": "A.G26",
+      "nt2": "A.A33",
+      "bp": "G-A",
+      "name": "Sheared",
+      "Saenger": "11-XI",
+      "LW": "tSH",
+      "DSSR": "tm-M"
+    }
+  ],
+  "program": "DSSR v2.8.1-2026mar12 by xiangjun@x3dna.org"
+}
