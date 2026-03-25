@@ -21,6 +21,7 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
 
     Map<Integer, Integer> nucleotidePositionMap = new HashMap<>();
     List<String> sequence = new ArrayList<>();
+    int uncommonResidues = 0;
     int lastPosition = 0;
     int differencePosition = 0;
 
@@ -41,6 +42,19 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
     @Override
     public void exitBarnabaFile(BarnabaParser.BarnabaFileContext ctx) {
         structure =  structureBuilder.build();
+    }
+
+    @Override
+    public void enterComment(BarnabaParser.CommentContext ctx) {
+        String comment = ctx.COMMENT().getText().trim();
+        if(comment.startsWith("Skipping unknown residue")) {
+            uncommonResidues++;
+        }
+    }
+
+    @Override
+    public void exitComment(BarnabaParser.CommentContext ctx) {
+
     }
 
     @Override
@@ -72,6 +86,10 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
     public void exitSequence(BarnabaParser.SequenceContext ctx) {
         StringBuilder seq = new StringBuilder();
         sequence.forEach(seq::append);
+        while (uncommonResidues-- > 0) {
+            // Fill position of uncommon residue
+            seq.append("N");
+        }
         structureBuilder = structureBuilder.setSequence(seq.toString());
     }
 
@@ -82,10 +100,28 @@ public class BarnabaParserCustomListener implements BarnabaParserListener {
         int i = 0;
 
         if(nucleotidePositionMap.isEmpty()) {
-            differencePosition = elPosition;
+            // Fill position of uncommon residue
+            int gapStartPosition = elPosition - 1;
+            if(elPosition > 1) {
+                while (gapStartPosition > 0 && uncommonResidues > 0) {
+                    gapStartPosition--;
+                    uncommonResidues--;
+                    nucleotidePositionMap.put(i, i); // 0-index
+                    appendNucleotide("N", i++);
+                }
+            }
+            differencePosition = gapStartPosition+1;
             lastPosition = elPosition;
         }
         else if(elPosition - lastPosition > 1) {
+
+            // Fill position of uncommon residue
+            int difference = elPosition - lastPosition;
+            while (difference > 1 && uncommonResidues > 0) {
+
+                difference--;
+            }
+
             /*
              * Remove the jump in the sequence
              * from: GGGCUGUUUUUCUCGCUGACUUUCAGCCC       CAAACAAAAAAUGUCAGCA

@@ -69,4 +69,4 @@ S_INT: [0-9]+;
 mode COMMENT_MODE;
 C_WS: WS_CHAR+ -> skip;
 C_NEWLINE: NEWLINE_CHAR -> skip, popMode;
-COMMENT: ~[\r\n]+ -> skip;
+COMMENT: ~[\r\n]+;

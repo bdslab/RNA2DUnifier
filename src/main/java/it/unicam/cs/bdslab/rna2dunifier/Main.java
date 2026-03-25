@@ -44,7 +44,7 @@ public class Main {
         ParseTreeWalker.DEFAULT.walk(listener, tree);
         System.out.println(listener.getStructure().toString());
 
-        CharStream cs2 = CharStreams.fromFileName("src/main/resources/rna-output/barnaba/4PLX_A.pdb.ANNOTATE.pairing.out");
+        CharStream cs2 = CharStreams.fromFileName("src/main/resources/rna-output/barnaba/4plx_A.out.txt");
         BarnabaLexer lexer2 = new BarnabaLexer(cs2);
         CommonTokenStream tokens2 = new CommonTokenStream(lexer2);
         BarnabaParser parser2 = new BarnabaParser(tokens2);

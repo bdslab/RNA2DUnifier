@@ -16,7 +16,8 @@ options {
 
 barnabaFile: info* interaction+ EOF;
 
-info: FILE_NAME # fileName
+info: COMMENT # comment
+    | FILE_NAME # fileName
     | sequence  # sequenceList;
 
 sequence: sequenceElement+;
