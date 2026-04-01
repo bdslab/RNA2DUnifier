@@ -9,7 +9,6 @@ import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateLexer;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateParser;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisCustomListener;
-import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.bpnet.BpnetParserCustomListener;
@@ -18,8 +17,6 @@ import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateParserCus
 import it.unicam.cs.bdslab.rna2dunifier.listeners.x3dna.JSONX3dnaListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarLexer;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarParser;
-import it.unicam.cs.bdslab.rnapolis.RNApolisLexer;
-import it.unicam.cs.bdslab.rnapolis.RNApolisParser;
 import it.unicam.cs.bdslab.rnaview.RNAviewLexer;
 import it.unicam.cs.bdslab.rnaview.RNAviewParser;
 import org.antlr.v4.runtime.*;
