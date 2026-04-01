@@ -6,15 +6,13 @@ import it.unicam.cs.bdslab.barnaba.BarnabaLexer;
 import it.unicam.cs.bdslab.barnaba.BarnabaParser;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarLexer;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
-import it.unicam.cs.bdslab.fr3d.Fr3dLexer;
-import it.unicam.cs.bdslab.fr3d.Fr3dParser;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateLexer;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateParser;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.bpnet.BpnetParserCustomListener;
-import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.Fr3dParserCustomListener;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.JSONFr3dListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.x3dna.JSONX3dnaListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisLexer;
@@ -53,15 +51,6 @@ public class Main {
         ParseTreeWalker.DEFAULT.walk(listener2, tree2);
         System.out.println(listener2.getStructure().toString());
 
-        CharStream cs4 = CharStreams.fromFileName("src/main/resources/rna-output/fr3d/4PLX_A_A_basepair.json");
-        Fr3dLexer lexer4 = new Fr3dLexer(cs4);
-        CommonTokenStream tokens4 = new CommonTokenStream(lexer4);
-        Fr3dParser parser4 = new Fr3dParser(tokens4);
-        ParseTree tree4 = parser4.fr3dFile(); // parse
-        Fr3dParserCustomListener listener4 = new Fr3dParserCustomListener();
-        ParseTreeWalker.DEFAULT.walk(listener4, tree4);
-        System.out.println(listener4.getStructure());
-
         CharStream cs5 = CharStreams.fromFileName("src/main/resources/rna-output/mc-annotate/txt/4PLX_A.txt");
         McAnnotateLexer lexer5 = new McAnnotateLexer(cs5);
         CommonTokenStream tokens5 = new CommonTokenStream(lexer5);
@@ -88,5 +77,14 @@ public class Main {
         JSONX3dnaListener listener8 = new JSONX3dnaListener();
         ParseTreeWalker.DEFAULT.walk(listener8, tree8);
         System.out.println(listener8.getStructure());
+
+        CharStream cs7 = CharStreams.fromFileName("src/main/resources/rna-output/fr3d/4PLX_C_C_basepair.json");
+        JSONLexer lexer7 = new JSONLexer(cs7);
+        CommonTokenStream tokens7 = new CommonTokenStream(lexer7);
+        JSONParser parser7 = new JSONParser(tokens7);
+        ParseTree tree7 = parser7.json(); // parse
+        JSONFr3dListener listener7 = new JSONFr3dListener();
+        ParseTreeWalker.DEFAULT.walk(listener7, tree7);
+        System.out.println(listener7.getStructure());
     }
 }
