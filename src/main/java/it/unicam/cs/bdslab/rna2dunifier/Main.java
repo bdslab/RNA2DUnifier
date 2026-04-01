@@ -8,6 +8,7 @@ import it.unicam.cs.bdslab.bpnet.BpnetGrammarLexer;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateLexer;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateParser;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomListener;
@@ -15,6 +16,8 @@ import it.unicam.cs.bdslab.rna2dunifier.listeners.bpnet.BpnetParserCustomListene
 import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.JSONFr3dListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.x3dna.JSONX3dnaListener;
+import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarLexer;
+import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarParser;
 import it.unicam.cs.bdslab.rnapolis.RNApolisLexer;
 import it.unicam.cs.bdslab.rnapolis.RNApolisParser;
 import it.unicam.cs.bdslab.rnaview.RNAviewLexer;
@@ -24,15 +27,6 @@ import org.antlr.v4.runtime.tree.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        CharStream cs3 = CharStreams.fromFileName("src/main/resources/rna-output/rnapolis/4PLX_A.3db");
-        RNApolisLexer lexer3 = new RNApolisLexer(cs3);
-        CommonTokenStream tokens3 = new CommonTokenStream(lexer3);
-        RNApolisParser parser3 = new RNApolisParser(tokens3);
-        ParseTree tree3 = parser3.rnapolisFile(); // parse
-        RNApolisParserCustomListener listener3 = new RNApolisParserCustomListener();
-        ParseTreeWalker.DEFAULT.walk(listener3, tree3);
-        System.out.println(listener3.getStructures().toString());
-
         CharStream cs = CharStreams.fromFileName("src/main/resources/rna-output/rnaview/4PLX_A.pdb.out");
         RNAviewLexer lexer = new RNAviewLexer(cs);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -86,5 +80,14 @@ public class Main {
         JSONFr3dListener listener7 = new JSONFr3dListener();
         ParseTreeWalker.DEFAULT.walk(listener7, tree7);
         System.out.println(listener7.getStructure());
+
+        CharStream cs1 = CharStreams.fromFileName("src/main/resources/rna-output/rnapolis/4PLX_A.3db");
+        RNApolisGrammarLexer lexer1 = new RNApolisGrammarLexer(cs1);
+        CommonTokenStream tokens1 = new CommonTokenStream(lexer1);
+        RNApolisGrammarParser parser1 = new RNApolisGrammarParser(tokens1);
+        ParseTree tree1 = parser1.rnapolisFile(); // parse
+        RNApolisCustomListener listener1 = new RNApolisCustomListener();
+        ParseTreeWalker.DEFAULT.walk(listener1, tree1);
+        System.out.println(listener1.getStructures().toString());
     }
 }
