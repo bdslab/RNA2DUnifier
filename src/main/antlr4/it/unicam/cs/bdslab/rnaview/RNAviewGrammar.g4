@@ -1,6 +1,6 @@
 grammar RNAviewGrammar;
 
-// Pasrser
+// Parser
 rnaviewFile: basePairLine* EOF ;
 
 basePairLine: ASSIGNED_NUMBERS

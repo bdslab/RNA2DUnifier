@@ -15,16 +15,14 @@ pairs: INT INT TEXT '?' TEXT pair*;
 
 pair:  INT INT TEXT '?' TEXT BOND;
 
-PAIR_TYPE: [BT] [PF] -> skip;
+PAIR_TYPE: ('BP' | 'TP' | 'BF') -> skip;
 DEFORMATION: [0-9]'.'INT+ -> skip;
 
 INT: [0] | [1-9][0-9]*;
-TEXT: SYMBOL+;
+TEXT: [A-Za-z0-9]+;
 BOND: EDGE ':' EDGE [CT];
 
 WS: [ \t\r\n] -> skip;
 COMMENT: '#' ~[?#\n]+ -> skip;
 
-fragment IUPAC_CODE: [ACGUacguTtRrYysSWwKkMmBbDdHhVvNn];
 fragment EDGE: [WHSwhszg+];
-fragment SYMBOL: [A-Za-z0-9];
