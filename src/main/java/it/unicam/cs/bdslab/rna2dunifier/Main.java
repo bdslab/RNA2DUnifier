@@ -9,7 +9,7 @@ import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateLexer;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateParser;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisCustomListener;
-import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewParserCustomListener;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.bpnet.BpnetParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.JSONFr3dListener;
@@ -17,22 +17,12 @@ import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateParserCus
 import it.unicam.cs.bdslab.rna2dunifier.listeners.x3dna.JSONX3dnaListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarLexer;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarParser;
-import it.unicam.cs.bdslab.rnaview.RNAviewLexer;
-import it.unicam.cs.bdslab.rnaview.RNAviewParser;
+import it.unicam.cs.bdslab.rnaview.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        CharStream cs = CharStreams.fromFileName("src/main/resources/rna-output/rnaview/4PLX_A.pdb.out");
-        RNAviewLexer lexer = new RNAviewLexer(cs);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        RNAviewParser parser = new RNAviewParser(tokens);
-        ParseTree tree = parser.rnaviewFile(); // parse
-        RNAviewParserCustomListener listener = new RNAviewParserCustomListener();
-        ParseTreeWalker.DEFAULT.walk(listener, tree);
-        System.out.println(listener.getStructure().toString());
-
         CharStream cs2 = CharStreams.fromFileName("src/main/resources/rna-output/barnaba/4plx_A.out.txt");
         BarnabaLexer lexer2 = new BarnabaLexer(cs2);
         CommonTokenStream tokens2 = new CommonTokenStream(lexer2);
@@ -86,5 +76,14 @@ public class Main {
         RNApolisCustomListener listener1 = new RNApolisCustomListener();
         ParseTreeWalker.DEFAULT.walk(listener1, tree1);
         System.out.println(listener1.getStructures().toString());
+
+        CharStream cs3 = CharStreams.fromFileName("src/main/resources/rna-output/rnaview/2M8K_A.pdb.out");
+        RNAviewGrammarLexer lexer3 = new RNAviewGrammarLexer(cs3);
+        CommonTokenStream tokens3 = new CommonTokenStream(lexer3);
+        RNAviewGrammarParser parser3 = new RNAviewGrammarParser(tokens3);
+        ParseTree tree3 = parser3.rnaviewFile(); // parse
+        RNAviewCustomListener listener3 = new RNAviewCustomListener();
+        ParseTreeWalker.DEFAULT.walk(listener3, tree3);
+        System.out.println(listener3.getStructure().toString());
     }
 }
