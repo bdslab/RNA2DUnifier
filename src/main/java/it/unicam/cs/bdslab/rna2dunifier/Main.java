@@ -6,14 +6,14 @@ import it.unicam.cs.bdslab.barnaba.BarnabaGrammarLexer;
 import it.unicam.cs.bdslab.barnaba.BarnabaGrammarParser;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarLexer;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
-import it.unicam.cs.bdslab.mcannotate.McAnnotateLexer;
-import it.unicam.cs.bdslab.mcannotate.McAnnotateParser;
+import it.unicam.cs.bdslab.mcannotate.McAnnotateGrammarLexer;
+import it.unicam.cs.bdslab.mcannotate.McAnnotateGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.bpnet.BpnetParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.JSONFr3dListener;
-import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateParserCustomListener;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.x3dna.JSONX3dnaListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarLexer;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarParser;
@@ -23,15 +23,6 @@ import org.antlr.v4.runtime.tree.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        CharStream cs5 = CharStreams.fromFileName("src/main/resources/rna-output/mc-annotate/txt/4PLX_A.txt");
-        McAnnotateLexer lexer5 = new McAnnotateLexer(cs5);
-        CommonTokenStream tokens5 = new CommonTokenStream(lexer5);
-        McAnnotateParser parser5 = new McAnnotateParser(tokens5);
-        ParseTree tree5 = parser5.mcAannotateFile(); // parse
-        McAnnotateParserCustomListener listener5 = new McAnnotateParserCustomListener();
-        ParseTreeWalker.DEFAULT.walk(listener5, tree5);
-        System.out.println(listener5.getStructure());
-
         CharStream cs6 = CharStreams.fromFileName("src/main/resources/rna-output/bpnet/4PLX_A.4PLX_A.out");
         BpnetGrammarLexer lexer6 = new BpnetGrammarLexer(cs6);
         CommonTokenStream tokens6 = new CommonTokenStream(lexer6);
@@ -85,5 +76,14 @@ public class Main {
         BarnabaCustomListener listener = new BarnabaCustomListener();
         ParseTreeWalker.DEFAULT.walk(listener, tree);
         System.out.println(listener.getStructure().toString());
+
+        CharStream cs2 = CharStreams.fromFileName("src/main/resources/rna-output/mc-annotate/txt/2M8K_A.txt");
+        McAnnotateGrammarLexer lexer2 = new McAnnotateGrammarLexer(cs2);
+        CommonTokenStream tokens2 = new CommonTokenStream(lexer2);
+        McAnnotateGrammarParser parser2 = new McAnnotateGrammarParser(tokens2);
+        ParseTree tree2 = parser2.mcAnnotateFile(); // parse
+        McAnnotateCustomListener listener2 = new McAnnotateCustomListener();
+        ParseTreeWalker.DEFAULT.walk(listener2, tree2);
+        System.out.println(listener2.getStructure());
     }
 }
