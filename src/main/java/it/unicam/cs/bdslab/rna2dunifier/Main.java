@@ -1,5 +1,7 @@
 package it.unicam.cs.bdslab.rna2dunifier;
 
+import it.unicam.cs.bdslab.JSON.JSONLexer;
+import it.unicam.cs.bdslab.JSON.JSONParser;
 import it.unicam.cs.bdslab.barnaba.BarnabaLexer;
 import it.unicam.cs.bdslab.barnaba.BarnabaParser;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarLexer;
@@ -14,13 +16,11 @@ import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomLis
 import it.unicam.cs.bdslab.rna2dunifier.listeners.bpnet.BpnetParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.Fr3dParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateParserCustomListener;
-import it.unicam.cs.bdslab.rna2dunifier.listeners.x3dna.X3dnaCustomListener;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.x3dna.JSONX3dnaListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisLexer;
 import it.unicam.cs.bdslab.rnapolis.RNApolisParser;
 import it.unicam.cs.bdslab.rnaview.RNAviewLexer;
 import it.unicam.cs.bdslab.rnaview.RNAviewParser;
-import it.unicam.cs.bdslab.x3dna.X3dnaGrammarLexer;
-import it.unicam.cs.bdslab.x3dna.X3dnaGrammarParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
@@ -80,13 +80,13 @@ public class Main {
         ParseTreeWalker.DEFAULT.walk(listener6, tree6);
         System.out.println(listener6.getStructure());
 
-        CharStream cs7 = CharStreams.fromFileName("src/main/resources/rna-output/x3dna-dssr/1YMO_A_pair-only.json");
-        X3dnaGrammarLexer lexer7 = new X3dnaGrammarLexer(cs7);
-        CommonTokenStream tokens7 = new CommonTokenStream(lexer7);
-        X3dnaGrammarParser parser7 = new X3dnaGrammarParser(tokens7);
-        ParseTree tree7 = parser7.x3dnaFile(); // parse
-        X3dnaCustomListener listener7 = new X3dnaCustomListener();
-        ParseTreeWalker.DEFAULT.walk(listener7, tree7);
-        System.out.println(listener7.getStructure());
+        CharStream cs8 = CharStreams.fromFileName("src/main/resources/rna-output/x3dna-dssr/1YMO_A.json");
+        JSONLexer lexer8 = new JSONLexer(cs8);
+        CommonTokenStream tokens8 = new CommonTokenStream(lexer8);
+        JSONParser parser8 = new JSONParser(tokens8);
+        ParseTree tree8 = parser8.json(); // parse
+        JSONX3dnaListener listener8 = new JSONX3dnaListener();
+        ParseTreeWalker.DEFAULT.walk(listener8, tree8);
+        System.out.println(listener8.getStructure());
     }
 }
