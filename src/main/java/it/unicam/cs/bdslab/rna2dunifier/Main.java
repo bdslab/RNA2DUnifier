@@ -2,15 +2,15 @@ package it.unicam.cs.bdslab.rna2dunifier;
 
 import it.unicam.cs.bdslab.JSON.JSONLexer;
 import it.unicam.cs.bdslab.JSON.JSONParser;
-import it.unicam.cs.bdslab.barnaba.BarnabaLexer;
-import it.unicam.cs.bdslab.barnaba.BarnabaParser;
+import it.unicam.cs.bdslab.barnaba.BarnabaGrammarLexer;
+import it.unicam.cs.bdslab.barnaba.BarnabaGrammarParser;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarLexer;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateLexer;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateParser;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis.RNApolisCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview.RNAviewCustomListener;
-import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaParserCustomListener;
+import it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba.BarnabaCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.bpnet.BpnetParserCustomListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.fr3d.JSONFr3dListener;
 import it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate.McAnnotateParserCustomListener;
@@ -23,15 +23,6 @@ import org.antlr.v4.runtime.tree.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        CharStream cs2 = CharStreams.fromFileName("src/main/resources/rna-output/barnaba/4plx_A.out.txt");
-        BarnabaLexer lexer2 = new BarnabaLexer(cs2);
-        CommonTokenStream tokens2 = new CommonTokenStream(lexer2);
-        BarnabaParser parser2 = new BarnabaParser(tokens2);
-        ParseTree tree2 = parser2.barnabaFile(); // parse
-        BarnabaParserCustomListener listener2 = new BarnabaParserCustomListener();
-        ParseTreeWalker.DEFAULT.walk(listener2, tree2);
-        System.out.println(listener2.getStructure().toString());
-
         CharStream cs5 = CharStreams.fromFileName("src/main/resources/rna-output/mc-annotate/txt/4PLX_A.txt");
         McAnnotateLexer lexer5 = new McAnnotateLexer(cs5);
         CommonTokenStream tokens5 = new CommonTokenStream(lexer5);
@@ -85,5 +76,14 @@ public class Main {
         RNAviewCustomListener listener3 = new RNAviewCustomListener();
         ParseTreeWalker.DEFAULT.walk(listener3, tree3);
         System.out.println(listener3.getStructure().toString());
+
+        CharStream cs = CharStreams.fromFileName("src/main/resources/rna-output/barnaba/4PLX_C.pdb.ANNOTATE.stacking.out");
+        BarnabaGrammarLexer lexer = new BarnabaGrammarLexer(cs);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        BarnabaGrammarParser parser = new BarnabaGrammarParser(tokens);
+        ParseTree tree = parser.barnabaFile(); // parse
+        BarnabaCustomListener listener = new BarnabaCustomListener();
+        ParseTreeWalker.DEFAULT.walk(listener, tree);
+        System.out.println(listener.getStructure().toString());
     }
 }
