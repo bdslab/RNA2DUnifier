@@ -16,12 +16,29 @@ import java.io.InputStream;
 import java.text.ParseException;
 
 /**
+ * Parser implementation for RNAview output files.
  *
+ * <p>This parser uses the ANTLR-generated lexer and parser for the RNAview grammar.
+ * It reads an input stream, walks the parse tree with a {@link RNAviewCustomListener},
+ * and builds an {@link ExtendedRNASecondaryStructure} object.
+ *
+ * @author Francesco Palozzi
+ * @see RnaStructureParser
+ * @see RNAviewCustomListener
  */
 public class RnaviewParser implements RnaStructureParser {
+
+    /**
+     * Parses an RNAview output file from the given input stream.
+     *
+     * @param inputStream the input stream containing the RNAview file content
+     * @return an {@link ExtendedRNASecondaryStructure} representing the parsed data
+     * @throws IOException    if an I/O error occurs while reading the stream
+     * @throws ParseException if the input does not conform to the RNAview grammar
+     */
     @Override
     public ExtendedRNASecondaryStructure parse(InputStream inputStream) throws IOException, ParseException {
-        // Create ANTLR Stream
+        // Create ANTLR stream
         CharStream charStream = CharStreams.fromStream(inputStream);
 
         // Lexer and parser from ANTLR
@@ -32,11 +49,11 @@ public class RnaviewParser implements RnaStructureParser {
         // Parsing
         ParseTree tree = parser.rnaviewFile();
 
-        // Listener build the structure
+        // Listener builds the structure
         RNAviewCustomListener listener = new RNAviewCustomListener();
         ParseTreeWalker.DEFAULT.walk(listener, tree);
 
-        // Return Secondary Structure
+        // Return secondary structure
         return listener.getStructure();
     }
 }

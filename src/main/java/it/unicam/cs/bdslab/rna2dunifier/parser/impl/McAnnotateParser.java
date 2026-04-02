@@ -16,12 +16,29 @@ import java.io.InputStream;
 import java.text.ParseException;
 
 /**
+ * Parser implementation for mc‑annotate output files.
  *
+ * <p>This parser uses the ANTLR-generated lexer and parser for the mc‑annotate grammar.
+ * It reads an input stream, walks the parse tree with a {@link McAnnotateCustomListener},
+ * and builds an {@link ExtendedRNASecondaryStructure} object.
+ *
+ * @author Francesco Palozzi
+ * @see RnaStructureParser
+ * @see McAnnotateCustomListener
  */
 public class McAnnotateParser implements RnaStructureParser {
+
+    /**
+     * Parses a mc‑annotate output file from the given input stream.
+     *
+     * @param inputStream the input stream containing the mc‑annotate file content
+     * @return an {@link ExtendedRNASecondaryStructure} representing the parsed data
+     * @throws IOException    if an I/O error occurs while reading the stream
+     * @throws ParseException if the input does not conform to the mc‑annotate grammar
+     */
     @Override
     public ExtendedRNASecondaryStructure parse(InputStream inputStream) throws IOException, ParseException {
-        // Create ANTLR Stream
+        // Create ANTLR stream
         CharStream charStream = CharStreams.fromStream(inputStream);
 
         // Lexer and parser from ANTLR
@@ -32,11 +49,11 @@ public class McAnnotateParser implements RnaStructureParser {
         // Parsing
         ParseTree tree = parser.mcAnnotateFile();
 
-        // Listener build the structure
+        // Listener builds the structure
         McAnnotateCustomListener listener = new McAnnotateCustomListener();
         ParseTreeWalker.DEFAULT.walk(listener, tree);
 
-        // Return Secondary Structure
+        // Return secondary structure
         return listener.getStructure();
     }
 }

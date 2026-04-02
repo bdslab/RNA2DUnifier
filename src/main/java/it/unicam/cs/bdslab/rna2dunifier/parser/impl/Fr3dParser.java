@@ -16,9 +16,26 @@ import java.io.InputStream;
 import java.text.ParseException;
 
 /**
+ * Parser implementation for FR3D JSON output files.
  *
+ * <p>This parser uses the ANTLR-generated lexer and parser for the JSON grammar
+ * (specifically adapted for FR3D output). It reads an input stream, walks the parse tree
+ * with a {@link JSONFr3dListener}, and builds an {@link ExtendedRNASecondaryStructure} object.
+ *
+ * @author Francesco Palozzi
+ * @see RnaStructureParser
+ * @see JSONFr3dListener
  */
 public class Fr3dParser implements RnaStructureParser {
+
+    /**
+     * Parses an FR3D JSON file from the given input stream.
+     *
+     * @param inputStream the input stream containing the FR3D JSON content
+     * @return an {@link ExtendedRNASecondaryStructure} representing the parsed data
+     * @throws IOException    if an I/O error occurs while reading the stream
+     * @throws ParseException if the input does not conform to the expected JSON structure
+     */
     @Override
     public ExtendedRNASecondaryStructure parse(InputStream inputStream) throws IOException, ParseException {
         // Create ANTLR stream
@@ -32,11 +49,11 @@ public class Fr3dParser implements RnaStructureParser {
         // Parsing
         ParseTree tree = parser.json();
 
-        // Listener build the structure
+        // Listener builds the structure
         JSONFr3dListener listener = new JSONFr3dListener();
         ParseTreeWalker.DEFAULT.walk(listener, tree);
 
-        // Return Secondary Structure
+        // Return secondary structure
         return listener.getStructure();
     }
 }
