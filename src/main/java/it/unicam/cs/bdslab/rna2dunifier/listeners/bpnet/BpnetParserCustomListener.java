@@ -1,18 +1,15 @@
 package it.unicam.cs.bdslab.rna2dunifier.listeners.bpnet;
 
-import it.unicam.cs.bdslab.bpnet.BpnetGrammarListener;
+import it.unicam.cs.bdslab.bpnet.BpnetGrammarBaseListener;
 import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class BpnetParserCustomListener implements BpnetGrammarListener {
+public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
 
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
 
@@ -47,11 +44,6 @@ public class BpnetParserCustomListener implements BpnetGrammarListener {
     }
 
     @Override
-    public void exitPairs(BpnetGrammarParser.PairsContext ctx) {
-
-    }
-
-    @Override
     public void enterPair(BpnetGrammarParser.PairContext ctx) {
         pairs.add(new Pair(
                 currentPosition-1,
@@ -78,30 +70,5 @@ public class BpnetParserCustomListener implements BpnetGrammarListener {
             case "g" -> "H";
             default -> "?";
         };
-    }
-
-    @Override
-    public void exitPair(BpnetGrammarParser.PairContext ctx) {
-
-    }
-
-    @Override
-    public void visitTerminal(TerminalNode terminalNode) {
-
-    }
-
-    @Override
-    public void visitErrorNode(ErrorNode errorNode) {
-
-    }
-
-    @Override
-    public void enterEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
-
-    @Override
-    public void exitEveryRule(ParserRuleContext parserRuleContext) {
-
     }
 }

@@ -1,17 +1,14 @@
 package it.unicam.cs.bdslab.rna2dunifier.listeners.barnaba;
 
-import it.unicam.cs.bdslab.barnaba.BarnabaGrammarListener;
+import it.unicam.cs.bdslab.barnaba.BarnabaGrammarBaseListener;
 import it.unicam.cs.bdslab.barnaba.BarnabaGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.*;
 
-public class BarnabaCustomListener implements BarnabaGrammarListener {
+public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
 
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
     private Pair.Builder pairBuilder;
@@ -51,11 +48,6 @@ public class BarnabaCustomListener implements BarnabaGrammarListener {
             this.pairBuilder.setNucleotide2(ctx.NUCLEOTIDE().getText());
             this.pairBuilder.setPos2(pos);
         }
-    }
-
-    @Override
-    public void exitResidueSpec(BarnabaGrammarParser.ResidueSpecContext ctx) {
-
     }
 
     @Override
@@ -164,30 +156,5 @@ public class BarnabaCustomListener implements BarnabaGrammarListener {
             sequence.add(" ");
         }
         sequence.add(nucleotide);
-    }
-
-    @Override
-    public void exitCommentLine(BarnabaGrammarParser.CommentLineContext ctx) {
-
-    }
-
-    @Override
-    public void visitTerminal(TerminalNode terminalNode) {
-
-    }
-
-    @Override
-    public void visitErrorNode(ErrorNode errorNode) {
-
-    }
-
-    @Override
-    public void enterEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
-
-    @Override
-    public void exitEveryRule(ParserRuleContext parserRuleContext) {
-
     }
 }

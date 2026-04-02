@@ -3,15 +3,12 @@ package it.unicam.cs.bdslab.rna2dunifier.listeners.RNApolis;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarListener;
+import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarBaseListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarParser;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.*;
 
-public class RNApolisCustomListener implements RNApolisGrammarListener {
+public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
 
     private final List<ExtendedRNASecondaryStructure> structures = new ArrayList<>();
     private ExtendedRNASecondaryStructure.Builder currentStructureBuilder;
@@ -20,16 +17,6 @@ public class RNApolisCustomListener implements RNApolisGrammarListener {
 
     public List<ExtendedRNASecondaryStructure> getStructures() {
         return structures;
-    }
-
-    @Override
-    public void enterRnapolisFile(RNApolisGrammarParser.RnapolisFileContext ctx) {
-
-    }
-
-    @Override
-    public void exitRnapolisFile(RNApolisGrammarParser.RnapolisFileContext ctx) {
-
     }
 
     @Override
@@ -48,19 +35,9 @@ public class RNApolisCustomListener implements RNApolisGrammarListener {
     }
 
     @Override
-    public void exitHeader(RNApolisGrammarParser.HeaderContext ctx) {
-
-    }
-
-    @Override
     public void enterSequence(RNApolisGrammarParser.SequenceContext ctx) {
         this.currentSequence = ctx.NUCLEOTIDE_SEQUENCE().getText();
         this.currentStructureBuilder.setSequence(this.currentSequence);
-    }
-
-    @Override
-    public void exitSequence(RNApolisGrammarParser.SequenceContext ctx) {
-
     }
 
     @Override
@@ -124,30 +101,5 @@ public class RNApolisCustomListener implements RNApolisGrammarListener {
                 System.err.println("Symbol " + e.getKey() + " has " + e.getValue().size() + " opening not closed");
             }
         }
-    }
-
-    @Override
-    public void exitInteraction(RNApolisGrammarParser.InteractionContext ctx) {
-
-    }
-
-    @Override
-    public void visitTerminal(TerminalNode terminalNode) {
-
-    }
-
-    @Override
-    public void visitErrorNode(ErrorNode errorNode) {
-
-    }
-
-    @Override
-    public void enterEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
-
-    @Override
-    public void exitEveryRule(ParserRuleContext parserRuleContext) {
-
     }
 }

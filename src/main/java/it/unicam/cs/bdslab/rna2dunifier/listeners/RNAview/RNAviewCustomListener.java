@@ -3,16 +3,13 @@ package it.unicam.cs.bdslab.rna2dunifier.listeners.RNAview;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-import it.unicam.cs.bdslab.rnaview.RNAviewGrammarListener;
+import it.unicam.cs.bdslab.rnaview.RNAviewGrammarBaseListener;
 import it.unicam.cs.bdslab.rnaview.RNAviewGrammarParser;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class RNAviewCustomListener implements RNAviewGrammarListener {
+public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
 
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
     private ExtendedRNASecondaryStructure structure;
@@ -74,30 +71,5 @@ public class RNAviewCustomListener implements RNAviewGrammarListener {
         }
 
         return BondType.fromString(o+edge1+edge2);
-    }
-
-    @Override
-    public void exitAnnotation(RNAviewGrammarParser.AnnotationContext ctx) {
-
-    }
-
-    @Override
-    public void visitTerminal(TerminalNode terminalNode) {
-
-    }
-
-    @Override
-    public void visitErrorNode(ErrorNode errorNode) {
-
-    }
-
-    @Override
-    public void enterEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
-
-    @Override
-    public void exitEveryRule(ParserRuleContext parserRuleContext) {
-
     }
 }

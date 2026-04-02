@@ -1,18 +1,16 @@
 package it.unicam.cs.bdslab.rna2dunifier.listeners.mcAnnotate;
 
-import it.unicam.cs.bdslab.mcannotate.McAnnotateGrammarListener;
+import it.unicam.cs.bdslab.mcannotate.McAnnotateGrammarBaseListener;
 import it.unicam.cs.bdslab.mcannotate.McAnnotateGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class McAnnotateCustomListener implements McAnnotateGrammarListener {
+public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
 
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
     private ExtendedRNASecondaryStructure structure;
@@ -45,46 +43,6 @@ public class McAnnotateCustomListener implements McAnnotateGrammarListener {
     }
 
     @Override
-    public void enterAdjacentSection(McAnnotateGrammarParser.AdjacentSectionContext ctx) {
-
-    }
-
-    @Override
-    public void exitAdjacentSection(McAnnotateGrammarParser.AdjacentSectionContext ctx) {
-
-    }
-
-    @Override
-    public void enterNonAdjacentSection(McAnnotateGrammarParser.NonAdjacentSectionContext ctx) {
-
-    }
-
-    @Override
-    public void exitNonAdjacentSection(McAnnotateGrammarParser.NonAdjacentSectionContext ctx) {
-
-    }
-
-    @Override
-    public void enterCountSection(McAnnotateGrammarParser.CountSectionContext ctx) {
-
-    }
-
-    @Override
-    public void exitCountSection(McAnnotateGrammarParser.CountSectionContext ctx) {
-
-    }
-
-    @Override
-    public void enterBasePairsSection(McAnnotateGrammarParser.BasePairsSectionContext ctx) {
-
-    }
-
-    @Override
-    public void exitBasePairsSection(McAnnotateGrammarParser.BasePairsSectionContext ctx) {
-
-    }
-
-    @Override
     public void enterResidueLine(McAnnotateGrammarParser.ResidueLineContext ctx) {
         String nucleotide = ctx.IDENTIFIER(1).getText();
         this.sequence += nucleotide.length() > 1 ? nucleotide.substring(0,1) : nucleotide;
@@ -94,28 +52,8 @@ public class McAnnotateCustomListener implements McAnnotateGrammarListener {
     }
 
     @Override
-    public void exitResidueLine(McAnnotateGrammarParser.ResidueLineContext ctx) {
-
-    }
-
-    @Override
-    public void enterAdjacentLine(McAnnotateGrammarParser.AdjacentLineContext ctx) {
-
-    }
-
-    @Override
-    public void exitAdjacentLine(McAnnotateGrammarParser.AdjacentLineContext ctx) {
-
-    }
-
-    @Override
     public void enterNonAdjacentLine(McAnnotateGrammarParser.NonAdjacentLineContext ctx) {
         this.structureBuilder.addPair(buildPair(ctx.PAIR_ID().getText(), BondType.fromString("stacking")));
-    }
-
-    @Override
-    public void exitNonAdjacentLine(McAnnotateGrammarParser.NonAdjacentLineContext ctx) {
-
     }
 
     @Override
@@ -125,41 +63,6 @@ public class McAnnotateCustomListener implements McAnnotateGrammarListener {
                         ctx.PAIR_ID().getText(),
                         getBondType(ctx.ORIENTATION(), ctx.BOND().getFirst().getText()))
         );
-    }
-
-    @Override
-    public void exitBasePairLine(McAnnotateGrammarParser.BasePairLineContext ctx) {
-
-    }
-
-    @Override
-    public void enterCountLine(McAnnotateGrammarParser.CountLineContext ctx) {
-
-    }
-
-    @Override
-    public void exitCountLine(McAnnotateGrammarParser.CountLineContext ctx) {
-
-    }
-
-    @Override
-    public void visitTerminal(TerminalNode terminalNode) {
-
-    }
-
-    @Override
-    public void visitErrorNode(ErrorNode errorNode) {
-
-    }
-
-    @Override
-    public void enterEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
-
-    @Override
-    public void exitEveryRule(ParserRuleContext parserRuleContext) {
-
     }
 
     private BondType getBondType(TerminalNode orientation, String bond) {
