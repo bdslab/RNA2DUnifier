@@ -1,20 +1,46 @@
+/**
+ * ANTLR 4 grammar for RNApolis output files.
+ *
+ * This parser defines the grammar rules used to parse RNApolis output files.
+ * The input typically consists of one or more strands, each with a header,
+ * a nucleotide sequence, and interaction lines describing base pairing.
+ *
+ * @author Francesco Palozzi
+ */
 grammar RNApolisGrammar;
 
-// Parser
-rnapolisFile : strandSection+ EOF ;
+// ------------------------------------
+// Parser rules
+// ------------------------------------
 
-strandSection : header sequence interaction* ;
+rnapolisFile : strandSection+ EOF ;                // One or more strand sections
 
-header : HEADER_STRING ;
-sequence : 'seq' NUCLEOTIDE_SEQUENCE ;
-interaction : INTERACTION_TYPE INTERACTION_SEQUENCE ;
+strandSection : header sequence interaction* ;     // Header, sequence, optional interactions
 
-// Lexer
-INTERACTION_TYPE : [ct][WHS][WHS] ;
-HEADER_STRING : '>' STRING;
-NUCLEOTIDE_SEQUENCE: [ACGU]+ ;
-INTERACTION_SEQUENCE: ([.()[{}<>] | ']' | [A-Z] | [a-z])+ ;
+header : HEADER_STRING ;                           // FASTA-style header line
 
-WS : [ \t\r\n]+ -> skip ;
+sequence : 'seq' NUCLEOTIDE_SEQUENCE ;             // 'seq' keyword + nucleotide sequence
 
-fragment STRING : ~[ \t\r\n]+ ;
+interaction : INTERACTION_TYPE INTERACTION_SEQUENCE ;  // Interaction type + encoded structure
+
+
+// ------------------------------------
+// Lexer rules
+// ------------------------------------
+
+INTERACTION_TYPE : [ct][WHS][WHS] ;                // e.g., cWW, tSH (cis/trans + edges)
+
+HEADER_STRING : '>' STRING;                        // Header starting with '>'
+
+NUCLEOTIDE_SEQUENCE: [ACGU]+ ;                     // RNA sequence (A, C, G, U)
+
+INTERACTION_SEQUENCE: ([.()[{}<>] | ']' | [A-Z] | [a-z])+ ;  // Dot-bracket notation + annotations
+
+WS : [ \t\r\n]+ -> skip ;                          // Skip whitespace
+
+
+// ------------------------------------
+// Fragments
+// ------------------------------------
+
+fragment STRING : ~[ \t\r\n]+ ;                    // Any non-whitespace characters

@@ -9,20 +9,35 @@
  */
 grammar BpnetGrammar;
 
-bpnetFile: pairs+ EOF;
 
-pairs: INT INT TEXT '?' TEXT pair*;
+// ------------------------------------
+// Parser rules
+// ------------------------------------
 
-pair:  INT INT TEXT '?' TEXT BOND;
+bpnetFile: pairs+ EOF;                    // One or more pair blocks
 
-PAIR_TYPE: ('BP' | 'TP' | 'BF') -> skip;
-DEFORMATION: [0-9]'.'INT+ -> skip;
+pairs: INT INT TEXT '?' TEXT pair*;       // Header line + optional bond details
 
-INT: [0] | [1-9][0-9]*;
-TEXT: [A-Za-z0-9]+;
-BOND: EDGE ':' EDGE [CT];
+pair:  INT INT TEXT '?' TEXT BOND;        // Single bond line
 
-WS: [ \t\r\n] -> skip;
-COMMENT: '#' ~[?#\n]+ -> skip;
 
-fragment EDGE: [WHSwhszg+];
+// ------------------------------------
+// Lexer rules
+// ------------------------------------
+
+PAIR_TYPE: ('BP' | 'TP' | 'BF') -> skip;  // Ignored (already captured as TEXT)
+DEFORMATION: [0-9]'.'INT+ -> skip;        // Ignored numeric deformation values
+
+INT: [0] | [1-9][0-9]*;                   // Non‑negative integer
+TEXT: [A-Za-z0-9]+;                       // Alphanumeric string
+BOND: EDGE ':' EDGE [CT];                 // e.g., W:WC (edge:edge + cis/trans)
+
+WS: [ \t\r\n] -> skip;                    // Skip whitespace
+COMMENT: '#' ~[?#\n]+ -> skip;            // Skip # comments
+
+
+// ------------------------------------
+// Fragments
+// ------------------------------------
+
+fragment EDGE: [WHSwhszg+];               // Valid edge characters
