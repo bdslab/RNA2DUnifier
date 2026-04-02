@@ -6,13 +6,14 @@
 
     <groupId>it.unicam.cs.bdslab</groupId>
     <artifactId>rna2d-unifier</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <antlr4.version>4.13.2</antlr4.version>
+        <jupiter.version>6.0.1</jupiter.version>
     </properties>
 
     <dependencies>
@@ -21,6 +22,14 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
             <version>${antlr4.version}</version>
+        </dependency>
+
+        <!-- Test dependency -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${jupiter.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -37,7 +46,7 @@
                         <goals><goal>antlr4</goal></goals>
                         <configuration>
                             <!-- Facoltativo: genera anche le classi Visitor -->
-                            <arguments>-visitor</arguments>
+                            <!-- <arguments>-visitor</arguments> -->
                             <!-- cartella sorgente grammars (default: src/main/antlr4) -->
                             <!-- output predefinito: target/generated-sources/antlr4 -->
                         </configuration>
