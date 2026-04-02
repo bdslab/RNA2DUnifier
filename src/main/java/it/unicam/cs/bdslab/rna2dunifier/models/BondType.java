@@ -1,17 +1,27 @@
 package it.unicam.cs.bdslab.rna2dunifier.models;
 
-import java.util.Optional;
-
 /**
  * Represents the bond types in RNA structures,
  * including canonical bonds, stacking interactions,
  * and the 12 geometric families of the Leontis-Westhof nomenclature.
+ *
+ * <p>The 12 Leontis‑Westhof families are encoded as:
+ * <ul>
+ *   <li>cWW, tWW – Watson‑Crick/Watson‑Crick</li>
+ *   <li>cWH, tWH – Watson‑Crick/Hoogsteen</li>
+ *   <li>cWS, tWS – Watson‑Crick/Sugar Edge</li>
+ *   <li>cHH, tHH – Hoogsteen/Hoogsteen</li>
+ *   <li>cHS, tHS – Hoogsteen/Sugar Edge</li>
+ *   <li>cSS, tSS – Sugar Edge/Sugar Edge</li>
+ * </ul>
+ * The prefix 'c' indicates cis orientation, 't' indicates trans.
  */
 public enum BondType {
 
     /** Unknown or unclassified bond type. */
     UNKNOWN("unknown"),
 
+    /** Stacking interaction */
     STACKING("stacking"),
 
     /** 1. Cis Watson–Crick/Watson–Crick Antiparallel */
@@ -59,7 +69,7 @@ public enum BondType {
     /**
      * Returns the string representation of the bond type.
      *
-     * @return The identifying string (e.g., "cWW", "tWH").
+     * @return the identifying string (e.g., "cWW", "tWH", "stacking", "unknown")
      */
     public String getInfo() {
         return info;
@@ -68,8 +78,9 @@ public enum BondType {
     /**
      * Retrieves the BondType instance from its textual representation.
      *
-     * @param text The string to search for (e.g., "cWW").
-     * @return The corresponding BondType, or UNKNOWN if not found or if the text is null.
+     * @param text the string to search for (e.g., "cWW"); case‑insensitive,
+     *             can be {@code null}
+     * @return the corresponding BondType, or {@link #UNKNOWN} if not found or if text is null
      */
     public static BondType fromString(String text) {
         if (text == null) {
@@ -83,16 +94,37 @@ public enum BondType {
         return UNKNOWN;
     }
 
+    /**
+     * Checks whether this bond type has a cis orientation.
+     * <p>
+     * Cis orientation means the two glycosidic bonds are on the same side of the base‑pair plane.
+     *
+     * @return {@code true} if this is a cis Leontis‑Westhof type (cWW, cWH, cWS, cHH, cHS, cSS);
+     *         {@code false} otherwise (including UNKNOWN and STACKING)
+     */
     public boolean isCis() {
         return this == LEONTIS_WESTHOF_cWW || this == LEONTIS_WESTHOF_cWH || this == LEONTIS_WESTHOF_cWS ||
                this == LEONTIS_WESTHOF_cHH || this == LEONTIS_WESTHOF_cHS || this == LEONTIS_WESTHOF_cSS;
     }
 
+    /**
+     * Checks whether this bond type has a trans orientation.
+     * <p>
+     * Trans orientation means the two glycosidic bonds are on opposite sides of the base‑pair plane.
+     *
+     * @return {@code true} if this is a trans Leontis‑Westhof type (tWW, tWH, tWS, tHH, tHS, tSS);
+     *         {@code false} otherwise (including UNKNOWN and STACKING)
+     */
     public boolean isTrans() {
         return this == LEONTIS_WESTHOF_tWW || this == LEONTIS_WESTHOF_tWH || this == LEONTIS_WESTHOF_tWS ||
                this == LEONTIS_WESTHOF_tHH || this == LEONTIS_WESTHOF_tHS || this == LEONTIS_WESTHOF_tSS;
     }
 
+    /**
+     * Checks whether this bond type represents a canonical (Watson‑Crick/Watson‑Crick) base pair.
+     *
+     * @return {@code true} for cWW or tWW; {@code false} otherwise (including UNKNOWN and STACKING)
+     */
     public boolean isCanonical() {
         return this == LEONTIS_WESTHOF_cWW || this == LEONTIS_WESTHOF_tWW;
     }
