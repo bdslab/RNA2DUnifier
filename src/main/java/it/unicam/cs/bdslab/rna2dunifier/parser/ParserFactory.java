@@ -33,4 +33,19 @@ public class ParserFactory {
             case X3DNA -> new X3dnaParser();
         };
     }
+
+    /**
+     * Automatically detects the tool type from the input file content.
+     *
+     * <p>This method is intended to analyse the structure of an input file
+     * (e.g., header lines, keywords, format patterns) and infer which tool
+     * produced it, eliminating the need for manual specification of
+     * {@link ToolType}.
+     *
+     * @return the detected {@link ToolType} corresponding to the input format
+     * @throws UnsupportedOperationException if this feature is not yet implemented
+     */
+    public static ToolType detectTool() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
