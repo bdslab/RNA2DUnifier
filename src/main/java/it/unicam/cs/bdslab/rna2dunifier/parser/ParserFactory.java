@@ -2,6 +2,10 @@ package it.unicam.cs.bdslab.rna2dunifier.parser;
 
 import it.unicam.cs.bdslab.rna2dunifier.parser.impl.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Factory class for obtaining RNA structure parsers based on the tool type.
  *
@@ -35,17 +39,58 @@ public class ParserFactory {
     }
 
     /**
-     * Automatically detects the tool type from the input file content.
+     * Automatically detects the tool type by scanning the first kilobytes
+     * of the input stream for format-specific signatures.
      *
-     * <p>This method is intended to analyse the structure of an input file
-     * (e.g., header lines, keywords, format patterns) and infer which tool
-     * produced it, eliminating the need for manual specification of
-     * {@link ToolType}.
+     * <p>The detection heuristics, derived from the ANTLR grammars, are:
+     * <ol>
+     *   <li><b>RNAview</b>  – contains the literal {@code BEGIN_base-pair}</li>
+     *   <li><b>McAnnotate</b> – contains {@code Residue conformations}</li>
+     *   <li><b>RNApolis</b>  – contains a FASTA-style header ({@code >…}) followed by {@code seq}</li>
+     *   <li><b>FR3D</b>      – JSON containing the key {@code "annotations"}</li>
+     *   <li><b>X3DNA</b>     – JSON containing the key {@code "pairs"}</li>
+     *   <li><b>Barnaba</b>   – lines matching {@code NINT_INT NINT_INT ANNOTATION} (e.g. {@code A_1_2 G_3_4 WWc})</li>
+     *   <li><b>Bpnet</b>     – lines containing a {@code ?} separator and a bond token like {@code W:WC}</li>
+     * </ol>
      *
-     * @return the detected {@link ToolType} corresponding to the input format
-     * @throws UnsupportedOperationException if this feature is not yet implemented
+     * <p><b>Important:</b> the stream must support {@link InputStream#mark(int)} /
+     * {@link InputStream#reset()} (wrap it in a {@link java.io.BufferedInputStream}
+     * if it does not). The stream position is restored before returning so the
+     * caller can still parse normally.
+     *
+     * @param inputStream the stream to inspect (must support mark/reset)
+     * @return the detected {@link ToolType}
+     * @throws IOException                if reading fails
+     * @throws IllegalArgumentException   if the format cannot be recognised
      */
-    public static ToolType detectTool() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public static ToolType detectTool(InputStream inputStream) throws IOException {
+        final int PEEK_SIZE = 4096;
+        inputStream.mark(PEEK_SIZE);
+        byte[] buf = inputStream.readNBytes(PEEK_SIZE);
+        inputStream.reset();
+
+        String preview = new String(buf, StandardCharsets.UTF_8);
+
+        if (preview.contains("BEGIN_base-pair"))          return ToolType.RNAVIEW;
+        if (preview.contains("Residue conformations"))    return ToolType.MCANNOTATE;
+        if (preview.contains(">") && preview.contains("seq "))
+            return ToolType.RNAPOLIS;
+
+        // JSON formats: distinguish by dominant key
+        if (preview.trim().startsWith("{") || preview.trim().startsWith("[")) {
+            if (preview.contains("\"annotations\""))      return ToolType.FR3D;
+            if (preview.contains("\"pairs\""))            return ToolType.X3DNA;
+        }
+
+        // Barnaba: NUCLEOTIDE_INT_INT pairs + WWc/WCc-style annotation
+        if (preview.matches("(?s).*[ACGUacgu]_\\d+_\\d+\\s+[ACGUacgu]_\\d+_\\d+\\s+[GUWCHS]{2}[ct].*"))
+            return ToolType.BARNABA;
+
+        // Bpnet: lines with '?' separator and W:W bond notation
+        if (preview.contains("?") &&
+                preview.matches("(?s).*\\d+\\s+\\d+\\s+\\w+\\s+\\?.*[WSHE]:[WSHE][CT].*"))
+            return ToolType.BPNET;
+
+        throw new IllegalArgumentException("Unable to detect the tool type from the provided input.");
     }
 }

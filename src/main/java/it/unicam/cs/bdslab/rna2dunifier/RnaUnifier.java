@@ -6,10 +6,7 @@ import it.unicam.cs.bdslab.rna2dunifier.parser.ParserFactory;
 import it.unicam.cs.bdslab.rna2dunifier.parser.RnaStructureParser;
 import it.unicam.cs.bdslab.rna2dunifier.parser.ToolType;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.text.ParseException;
 
@@ -50,6 +47,25 @@ public class RnaUnifier {
     }
 
     /**
+     * Parses an input file, auto-detecting the source tool, and returns
+     * its unified bpseq representation.
+     *
+     * @param inputFile the input file to process
+     * @return a bpseq string representation of the RNA secondary structure
+     * @throws IOException              if an I/O error occurs
+     * @throws ParseException           if the format is not valid
+     * @throws IllegalArgumentException if the tool type cannot be detected
+     */
+    public static String process(File inputFile) throws IOException, ParseException {
+        try (BufferedInputStream bis = new BufferedInputStream(
+                new FileInputStream(inputFile))) {
+            ToolType type = ParserFactory.detectTool(bis);
+            System.out.println(type);
+            return process(bis, type);
+        }
+    }
+
+    /**
      * Parses an input stream and returns its unified bpseq representation.
      *
      * @param inputStream the input stream containing the RNA structure description
@@ -65,6 +81,25 @@ public class RnaUnifier {
     }
 
     /**
+     * Parses an input stream, auto-detecting the source tool, and returns
+     * its unified bpseq representation.
+     *
+     * <p>The stream <b>must</b> support mark/reset — wrap in a
+     * {@link java.io.BufferedInputStream} if it does not.
+     *
+     * @param inputStream the stream to process (must support mark/reset)
+     * @return a bpseq string representation
+     * @throws IOException              if an I/O error occurs
+     * @throws ParseException           if the format is not valid
+     * @throws IllegalArgumentException if the tool type cannot be detected
+     */
+    public static String process(InputStream inputStream) throws IOException, ParseException {
+        ToolType type = ParserFactory.detectTool(inputStream);
+        System.out.println(type);
+        return process(inputStream, type);
+    }
+
+    /**
      * Parses an input file and writes the unified bpseq representation directly to an output file.
      *
      * @param inputFile  the input file containing the RNA structure description
@@ -75,6 +110,15 @@ public class RnaUnifier {
      */
     public static void processToFile(File inputFile, ToolType toolType, File outputFile) throws IOException, ParseException {
         String bpseq = process(inputFile, toolType);
+        Files.write(outputFile.toPath(), bpseq.getBytes());
+    }
+
+    /**
+     * Parses an input file, auto-detecting the source tool, and writes
+     * the bpseq output to the specified file.
+     */
+    public static void processToFile(File inputFile, File outputFile) throws IOException, ParseException {
+        String bpseq = process(inputFile);
         Files.write(outputFile.toPath(), bpseq.getBytes());
     }
 }
