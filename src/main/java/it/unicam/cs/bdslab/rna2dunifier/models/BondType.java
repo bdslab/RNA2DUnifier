@@ -1,5 +1,9 @@
 package it.unicam.cs.bdslab.rna2dunifier.models;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
 /**
  * Represents the bond types in RNA structures,
  * including canonical bonds, stacking interactions,
@@ -127,5 +131,18 @@ public enum BondType {
      */
     public boolean isCanonical() {
         return this == LEONTIS_WESTHOF_cWW || this == LEONTIS_WESTHOF_tWW;
+    }
+
+    /**
+     * Returns a list of the 12 Leontis-Westhof bond types in a consistent order.
+     * @return List of BondType representing the Leontis-Westhof geometric families, excluding UNKNOWN, CANONICAL, NON_CANONICAL, and STACKING.
+     */
+    public static List<BondType> getLeontisWesthofFamily() {
+        return Arrays.stream(values())
+                .filter(bt -> bt != BondType.UNKNOWN
+                        && bt != BondType.STACKING
+                )
+                .sorted(Comparator.comparingInt(Enum::ordinal))
+                .toList();
     }
 }
