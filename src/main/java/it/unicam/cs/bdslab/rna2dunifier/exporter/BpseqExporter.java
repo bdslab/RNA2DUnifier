@@ -29,28 +29,22 @@ public class BpseqExporter {
     );
 
     /**
-     * Exports an RNA secondary structure to bpseq format.
+     * Exports an RNA secondary structure to an extended bpseq format.
+     * The extended format includes, for each position, the pairing partner(s)
+     * for every bond type in the Leontis‑Westhof family.
+     *
+     * <p>The output consists of a header line followed by one line per nucleotide.
+     * Each line contains:
+     * <ul>
+     *   <li>1‑based index</li>
+     *   <li>nucleotide character</li>
+     *   <li>for each bond type (in the order defined by {@link BondType#getLeontisWesthofFamily()}),
+     *       a comma‑separated list of 1‑based partner indices (or 0 if none)</li>
+     * </ul>
      *
      * @param structure the RNA secondary structure to export
-     * @return a string containing the bpseq representation, with each line
-     *         separated by newline characters
+     * @return a string containing the extended bpseq representation
      */
-    public static String export(ExtendedRNASecondaryStructure structure) {
-        StringBuilder sb = new StringBuilder();
-
-        List<Pair> pairs = structure.getPairs();
-        String seq = structure.getSequence();
-
-        for (int i = 0; i < seq.length(); i++) {
-            int pairIndex = findPairIndex(i, pairs);
-            sb.append(i + 1).append("\t")
-                    .append(seq.charAt(i)).append("\t")
-                    .append(pairIndex).append("\n");
-        }
-        return sb.toString();
-    }
-
-    @SuppressWarnings("unused")
     public String printExtendedBPSEQ(ExtendedRNASecondaryStructure structure) {
         StringBuilder result = new StringBuilder();
         result.append(HEADER);
@@ -78,22 +72,5 @@ public class BpseqExporter {
             result.append("\n");
         }
         return result.toString();
-    }
-
-
-    /**
-     * Finds the pairing partner for a given position in the sequence.
-     *
-     * @param pos   the zero‑based index of the nucleotide to look up
-     * @param pairs the list of all pairs in the structure
-     * @return the 1‑based index of the paired nucleotide if found,
-     *         or 0 if the nucleotide is unpaired
-     */
-    private static int findPairIndex(int pos, List<Pair> pairs) {
-        for (Pair p : pairs) {
-            if (p.getPos1() == pos) return p.getPos2() + 1; // convert to 1‑based
-            if (p.getPos2() == pos) return p.getPos1() + 1; // convert to 1‑based
-        }
-        return 0;
     }
 }
