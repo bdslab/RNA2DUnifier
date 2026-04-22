@@ -4,6 +4,7 @@ import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -39,7 +40,7 @@ public class BpseqExporter {
         StringBuilder sb = new StringBuilder();
 
         List<Pair> pairs = structure.getCanonical();
-        String seq = structure.getSequence();
+        String seq = this.getSequence(structure);
 
         for (int i = 0; i < seq.length(); i++) {
 
@@ -77,8 +78,11 @@ public class BpseqExporter {
         StringBuilder result = new StringBuilder();
         result.append(HEADER);
         result.append("\n");
-        for (int i = 0; i < structure.getSequence().length(); i++) {
-            char nucleotide = structure.getSequence().charAt(i);
+
+        String seq = this.getSequence(structure);
+
+        for (int i = 0; i < seq.length(); i++) {
+            char nucleotide = seq.charAt(i);
             result.append(i + 1).append("\t").append(nucleotide).append("\t");
             for (BondType type : BondType.getLeontisWesthofFamily()) {
                 int finalI = i;
@@ -107,5 +111,38 @@ public class BpseqExporter {
                 .filter(pair -> pair.getPos1() == pos || pair.getPos2() == pos)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String getSequence(ExtendedRNASecondaryStructure structure) {
+
+        if(structure.getSequence() != null && !structure.getSequence().isEmpty()) {
+            return structure.getSequence();
+        }
+
+        int maxPos = -1;
+        for (Pair pair : structure.getPairs()) {
+            maxPos = Math.max(maxPos, Math.max(pair.getPos1(), pair.getPos2()));
+        }
+
+        if(maxPos == -1) {
+            return "";
+        }
+
+        char[] seq = new char[maxPos+1];
+        Arrays.fill(seq, 'N');
+
+        for (Pair pair : structure.getPairs()) {
+            String nuc1 = pair.getNucleotide1();
+            if(nuc1 != null && !nuc1.isEmpty()) {
+                seq[pair.getPos1()] = nuc1.charAt(0);
+            }
+
+            String nuc2 = pair.getNucleotide2();
+            if(nuc2 != null && !nuc2.isEmpty()) {
+                seq[pair.getPos2()] = nuc2.charAt(0);
+            }
+        }
+
+        return new String(seq);
     }
 }
