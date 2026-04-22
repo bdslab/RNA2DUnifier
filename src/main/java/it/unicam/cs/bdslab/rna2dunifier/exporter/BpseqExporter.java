@@ -29,6 +29,34 @@ public class BpseqExporter {
     );
 
     /**
+     * Exports an RNA secondary structure to canonical bpseq format.
+     *
+     * @param structure the RNA secondary structure to export
+     * @return a string containing the bpseq canonical representation, with each line
+     *         separated by newline characters
+     */
+    public String printCanonicalBPSEQ(ExtendedRNASecondaryStructure structure) {
+        StringBuilder sb = new StringBuilder();
+
+        List<Pair> pairs = structure.getCanonical();
+        String seq = structure.getSequence();
+
+        for (int i = 0; i < seq.length(); i++) {
+
+            Pair pair = findPair(i, pairs);
+
+            if(pair == null) {
+                continue;
+            }
+
+            sb.append(i+1).append("\t")
+                .append(seq.charAt(i)).append("\t")
+                .append((pair.getPos1() == i ? pair.getPos2() : pair.getPos1())+1).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
      * Exports an RNA secondary structure to an extended bpseq format.
      * The extended format includes, for each position, the pairing partner(s)
      * for every bond type in the Leontis‑Westhof family.
@@ -72,5 +100,12 @@ public class BpseqExporter {
             result.append("\n");
         }
         return result.toString();
+    }
+
+    private Pair findPair(int pos, List<Pair> pairs) {
+        return pairs.stream()
+                .filter(pair -> pair.getPos1() == pos || pair.getPos2() == pos)
+                .findFirst()
+                .orElse(null);
     }
 }

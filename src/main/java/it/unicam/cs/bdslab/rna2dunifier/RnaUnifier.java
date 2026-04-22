@@ -53,9 +53,9 @@ public class RnaUnifier {
      * @throws IOException    if an I/O error occurs while reading the file
      * @throws ParseException if the input file does not conform to the expected format
      */
-    public String process(File inputFile, ToolType toolType) throws IOException, ParseException {
+    public String process(File inputFile, ToolType toolType, boolean extended) throws IOException, ParseException {
         try (InputStream is = new FileInputStream(inputFile)) {
-            return process(is, toolType);
+            return process(is, toolType, extended);
         }
     }
 
@@ -69,9 +69,9 @@ public class RnaUnifier {
      * @throws ParseException           if the format is not valid
      * @throws IllegalArgumentException if the tool type cannot be detected
      */
-    public String process(File inputFile) throws IOException, ParseException {
+    public String process(File inputFile, boolean extended) throws IOException, ParseException {
         try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(inputFile))) {
-            return process(bis, ParserFactory.detectTool(bis));
+            return process(bis, ParserFactory.detectTool(bis), extended);
         }
     }
 
@@ -84,10 +84,10 @@ public class RnaUnifier {
      * @throws IOException    if an I/O error occurs while reading the stream
      * @throws ParseException if the input does not conform to the expected format
      */
-    public String process(InputStream inputStream, ToolType toolType) throws IOException, ParseException {
+    public String process(InputStream inputStream, ToolType toolType, boolean extended) throws IOException, ParseException {
         RnaStructureParser parser = ParserFactory.getParser(toolType);
         ExtendedRNASecondaryStructure structure = parser.parse(inputStream);
-        return this.exporter.printExtendedBPSEQ(structure);
+        return extended ? this.exporter.printExtendedBPSEQ(structure) : this.exporter.printCanonicalBPSEQ(structure);
     }
 
     /**
@@ -103,9 +103,9 @@ public class RnaUnifier {
      * @throws ParseException           if the format is not valid
      * @throws IllegalArgumentException if the tool type cannot be detected
      */
-    public String process(InputStream inputStream) throws IOException, ParseException {
+    public String process(InputStream inputStream, boolean extended) throws IOException, ParseException {
         ToolType type = ParserFactory.detectTool(inputStream);
-        return process(inputStream, type);
+        return process(inputStream, type, extended);
     }
 
     /**
@@ -118,8 +118,8 @@ public class RnaUnifier {
      * @throws IOException    if an I/O error occurs while reading the input or writing the output
      * @throws ParseException if the input file does not conform to the expected format
      */
-    public void processToFile(File inputFile, ToolType toolType, File outputFile) throws IOException, ParseException {
-        String bpseq = process(inputFile, toolType);
+    public void processToFile(File inputFile, ToolType toolType, File outputFile, boolean extended) throws IOException, ParseException {
+        String bpseq = process(inputFile, toolType, extended);
         Files.write(outputFile.toPath(), bpseq.getBytes());
     }
 
@@ -133,8 +133,8 @@ public class RnaUnifier {
      * @throws ParseException           if the input format is not valid
      * @throws IllegalArgumentException if the tool type cannot be detected
      */
-    public void processToFile(File inputFile, File outputFile) throws IOException, ParseException {
-        String bpseq = process(inputFile);
+    public void processToFile(File inputFile, File outputFile, boolean extended) throws IOException, ParseException {
+        String bpseq = process(inputFile, extended);
         Files.write(outputFile.toPath(), bpseq.getBytes());
     }
 }
