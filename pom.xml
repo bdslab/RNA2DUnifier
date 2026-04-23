@@ -24,10 +24,26 @@
             <version>${antlr4.version}</version>
         </dependency>
 
-        <!-- Test dependency -->
+        <!-- Test dependencies JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <version>${jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Necessario per @ParameterizedTest e @EnumSource -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Engine per eseguire i test con Maven Surefire -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
             <version>${jupiter.version}</version>
             <scope>test</scope>
         </dependency>
@@ -35,7 +51,20 @@
 
     <build>
         <plugins>
-            <!-- Genera le classi dal grammar durante 'generate-sources' -->
+            <!-- Plugin per eseguire i test JUnit 5 con mvn test -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <!-- Scopre automaticamente le classi di test JUnit 5 -->
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+
+
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
