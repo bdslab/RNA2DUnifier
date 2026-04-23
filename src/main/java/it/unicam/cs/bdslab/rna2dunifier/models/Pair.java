@@ -1,5 +1,7 @@
 package it.unicam.cs.bdslab.rna2dunifier.models;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
@@ -139,22 +141,32 @@ public class Pair {
      */
     @Override
     public boolean equals(Object o) {
-        if (o == null) return false;
-        if (!(o instanceof Pair pair)) return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pair pair = (Pair) o;
 
-        if (pos1 == pair.getPos1() &&
-                pos2 == pair.getPos2() &&
-                nucleotide1.equals(pair.getNucleotide1()) &&
-                nucleotide2.equals(pair.getNucleotide2()) &&
-                type == pair.getType()) {
-            return true;
+        // Bond type must be equal
+        if (type != pair.type) return false;
+
+        // Positions must match as an unordered pair
+        boolean positionsMatch = (pos1 == pair.pos1 && pos2 == pair.pos2) ||
+                (pos1 == pair.pos2 && pos2 == pair.pos1);
+
+        // Nucleotides must match as an unordered pair, handling nulls
+        return positionsMatch && nucleotidesEqualUnordered(nucleotide1, nucleotide2,
+                pair.nucleotide1, pair.nucleotide2);
+    }
+
+    private boolean nucleotidesEqualUnordered(String a1, String a2, String b1, String b2) {
+        // Both null pairs
+        if (a1 == null && a2 == null) {
+            return b1 == null && b2 == null;
         }
+        if (b1 == null && b2 == null) return false;
 
-        return pos1 == pair.getPos2() &&
-                pos2 == pair.getPos1() &&
-                nucleotide1.equals(pair.getNucleotide2()) &&
-                nucleotide2.equals(pair.getNucleotide1()) &&
-                type == pair.getType();
+        // Compare unordered
+        return (Objects.equals(a1, b1) && Objects.equals(a2, b2)) ||
+                (Objects.equals(a1, b2) && Objects.equals(a2, b1));
     }
 
     /**
@@ -169,17 +181,11 @@ public class Pair {
         int p1 = Math.min(pos1, pos2);
         int p2 = Math.max(pos1, pos2);
 
-        // Canonical order for nucleotides (e.g., lexicographic)
-        String n1, n2;
-        if (nucleotide1.compareTo(nucleotide2) <= 0) {
-            n1 = nucleotide1;
-            n2 = nucleotide2;
-        } else {
-            n1 = nucleotide2;
-            n2 = nucleotide1;
-        }
+        String[] nucs = {nucleotide1, nucleotide2};
+        Arrays.sort(nucs, Comparator.nullsFirst(Comparator.naturalOrder()));
+        // nucs[0] is the smaller (null if any null), nucs[1] the larger
 
-        return Objects.hash(p1, p2, n1, n2, type);
+        return Objects.hash(p1, p2, nucs[0], nucs[1], type);
     }
 
     /**
