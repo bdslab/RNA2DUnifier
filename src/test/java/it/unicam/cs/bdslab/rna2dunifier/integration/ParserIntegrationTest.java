@@ -271,13 +271,13 @@ class ParserIntegrationTest {
     void allParsersProduceValidBondTypes() throws IOException, ParseException {
         record Entry(ToolType type, String path) {}
         Entry[] entries = {
-                new Entry(ToolType.BARNABA,    "rna-output/barnaba/1YMO_A.pdb.ANNOTATE.pairing.out"),
-                new Entry(ToolType.FR3D,       "rna-output/fr3d/1YMO_A_A_basepair.json"),
-                new Entry(ToolType.RNAVIEW,    "rna-output/rnaview/1YMO_A.pdb.out"),
+                new Entry(ToolType.BARNABA, "rna-output/barnaba/1YMO_A.pdb.ANNOTATE.pairing.out"),
+                new Entry(ToolType.FR3D, "rna-output/fr3d/1YMO_A_A_basepair.json"),
+                new Entry(ToolType.RNAVIEW, "rna-output/rnaview/1YMO_A.pdb.out"),
                 new Entry(ToolType.MCANNOTATE, "rna-output/mc-annotate/txt/1YMO_A.txt"),
-                new Entry(ToolType.BPNET,      "rna-output/bpnet/1YMO_A.1YMO_A.out"),
-                new Entry(ToolType.RNAPOLIS,   "rna-output/rnapolis/1YMO_A.3db"),
-                new Entry(ToolType.X3DNA,      "rna-output/x3dna-dssr/1YMO_A_pair-only.json"),
+                new Entry(ToolType.BPNET, "rna-output/bpnet/1YMO_A.1YMO_A.out"),
+                new Entry(ToolType.RNAPOLIS, "rna-output/rnapolis/1YMO_A.3db"),
+                new Entry(ToolType.X3DNA, "rna-output/x3dna-dssr/1YMO_A_pair-only.json"),
         };
 
         for (Entry e : entries) {
