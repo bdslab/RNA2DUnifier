@@ -34,11 +34,17 @@ public class JSONX3dnaListener extends JSONBaseListener {
     /** The final built structure. */
     private ExtendedRNASecondaryStructure structure;
 
+    /** The sequence string builder */
+    private final StringBuilder sequence = new StringBuilder();
+
     /** Stack tracking JSON object member names (keys) to maintain context. */
     private final Stack<String> positionStack = new Stack<>();
 
     /** Flag indicating whether we are inside the "pairs" array. */
     private boolean inPairs = false;
+
+    /** Flag indicating whether we are inside the "nts" array */
+    private boolean inNts = false;
 
     /**
      * Returns the parsed RNA secondary structure.
@@ -68,6 +74,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
      */
     @Override
     public void exitJson(JSONParser.JsonContext ctx) {
+        structureBuilder.setSequence(sequence.toString());
         this.structure = structureBuilder.build();
     }
 
@@ -111,9 +118,14 @@ public class JSONX3dnaListener extends JSONBaseListener {
     public void enterMember(JSONParser.MemberContext ctx) {
         String val = ctx.STRING().getText().replaceAll("\"", "");
         buildPair(val, ctx);
+        buildSequence(val, ctx);
         positionStack.push(val);
-        if (positionStack.size() == 1 && positionStack.peek().equals("pairs")) {
-            inPairs = true;
+        if (positionStack.size() == 1) {
+            if(positionStack.peek().equals("pairs")) {
+                inPairs = true;
+            } else if(positionStack.peek().equals("nts")) {
+                inNts = true;
+            }
         }
     }
 
@@ -155,6 +167,12 @@ public class JSONX3dnaListener extends JSONBaseListener {
         }
     }
 
+    private void buildSequence(String val, JSONParser.MemberContext ctx) {
+        if(inNts && val.equals("nt_name")) {
+            sequence.append(getItem(ctx));
+        }
+    }
+
     /**
      * Extracts the string value from a member context (removing surrounding quotes).
      *
@@ -177,6 +195,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
         positionStack.pop();
         if (positionStack.isEmpty()) {
             inPairs = false;
+            inNts = false;
         }
     }
 }
