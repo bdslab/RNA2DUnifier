@@ -1,5 +1,6 @@
 package it.unicam.cs.bdslab.rna2dunifier.parser.impl;
 
+import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 import org.junit.jupiter.api.BeforeEach;
@@ -551,5 +552,21 @@ class RnapolisParserTest {
         assertTrue(containsPair(s.getPairs(),0,14));
         assertTrue(containsPair(s.getPairs(),2,16));
         assertTrue(containsPair(s.getPairs(),3,17));
+    }
+
+    @Test
+    @DisplayName("All bond types in .3db files are recognized (no UNKNOWN)")
+    void testNoUnknownBondTypes() throws Exception {
+        String[] files = {
+                "1YMO_A.3db", "2K95_A.3db", "2M8K_A.3db",
+                "4PLX_A.3db", "4PLX_B.3db", "4PLX_C.3db"
+        };
+        for (String file : files) {
+            ExtendedRNASecondaryStructure struct = parser.parse(resource(file));
+            for (Pair p : struct.getPairs()) {
+                assertNotEquals(BondType.UNKNOWN, p.getType(),
+                        "File " + file + " contains pair with UNKNOWN type: " + p);
+            }
+        }
     }
 }

@@ -2,13 +2,14 @@ package it.unicam.cs.bdslab.rna2dunifier.parser.impl;
 
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
+import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.InputStream;
 import java.text.ParseException;
-import java.util.Objects;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -65,11 +66,6 @@ class RnaviewParserTest {
     void testParse2K95_CanonicalTypes() throws Exception {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/rnaview/2K95_A.pdb_sort.out")) {
             ExtendedRNASecondaryStructure struct = parser.parse(is);
-            // According to the summary in the file, there are 15 standard (WW cis) pairs,
-            // 4 WH cis, 1 HS cis, 2 HS trans, and 1 SS cis.
-            long wwCis = struct.getPairs().stream()
-                    .filter(p -> p.getType() != null && p.getType().toString().equals("cWW"))
-                    .count();
             // Depending on how Pair.type is set, we may need to adjust. Here we simply
             // verify that the total number of pairs equals 23 and that at least one
             // non‑canonical (e.g., S/H tran) exists.
@@ -93,6 +89,110 @@ class RnaviewParserTest {
                     .anyMatch(p -> (p.getPos1() == 75 || p.getPos2() == 75) &&
                             (Objects.equals("a", p.getNucleotide1()) || Objects.equals("a", p.getNucleotide2())));
             assertTrue(hasUncommon, "Should contain pair with uncommon residue a76");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1YMO_A.pdb.out, 1_29, cWW",
+            "1YMO_A.pdb.out, 5_25, cWW",
+            "1YMO_A.pdb.out, 5_35, cHS",
+            "1YMO_A.pdb.out, 6_36, tHS",
+            "1YMO_A.pdb.out, 7_36, STACKING",
+            "1YMO_A.pdb.out, 7_37, cWH",
+            "1YMO_A.pdb.out, 12_43, cHS",
+            "1YMO_A.pdb.out, 2_32, tWS",
+            "1YMO_A.pdb.out, 3_32, tSS",
+            "1YMO_A.pdb_sort.out, 1_29, cWW",
+            "1YMO_A.pdb_sort.out, 5_35, cHS",
+            "2K95_A.pdb.out, 1_29, cWW",
+            "2K95_A.pdb.out, 5_35, cHS",
+            "2K95_A.pdb.out, 6_36, tHS",
+            "2K95_A.pdb.out, 6_7, cSS",
+            "2K95_A.pdb.out, 11_20, cWH",
+            "2K95_A.pdb.out, 12_19, tHS",
+            "2K95_A.pdb_sort.out, 19_43, cWW",
+            "2K95_A.pdb_sort.out, 6_7, cSS",
+            "2M8K_A.pdb.out, 1_28, cWW",
+            "2M8K_A.pdb.out, 3_26, cWW",
+            "2M8K_A.pdb.out, 6_36, cWH",
+            "2M8K_A.pdb.out, 9_40, cHS",
+            "2M8K_A.pdb.out, 13_46, cWW",
+            "2M8K_A.pdb_sort.out, 13_46, cWW",
+            "4PLX_A.pdb.out, 2_54, cWW",
+            "4PLX_A.pdb.out, 6_50, cWW",
+            "4PLX_A.pdb.out, 6_65, tSS",
+            "4PLX_A.pdb.out, 7_66, cWH",
+            "4PLX_A.pdb.out, 11_70, cHS",
+            "4PLX_A.pdb.out, 25_28, tHS",
+            "4PLX_A.pdb_sort.out, 2_54, cWW",
+            "4PLX_A.pdb_sort.out, 11_70, cHS"
+    })
+    void testBondTypeMapping(String resourcePath, String pairKey, String expectedBondType) throws Exception {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/rnaview/" + resourcePath)) {
+            assertNotNull(is, "Resource not found: " + resourcePath);
+            ExtendedRNASecondaryStructure struct = parser.parse(is);
+
+            // Parse pairKey like "1_29" into positions
+            String[] parts = pairKey.split("_");
+            int pos1 = Integer.parseInt(parts[0]) - 1; // RNAview uses 1-based internal numbers, but after normalization they become 0-based
+            int pos2 = Integer.parseInt(parts[1]) - 1;
+
+            // Find the pair with these positions (order doesn't matter)
+            Pair found = struct.getPairs().stream()
+                    .filter(p -> (p.getPos1() == pos1 && p.getPos2() == pos2) ||
+                            (p.getPos1() == pos2 && p.getPos2() == pos1))
+                    .findFirst()
+                    .orElse(null);
+            assertNotNull(found, "Pair " + pairKey + " not found in parsed structure");
+
+            BondType expected = BondType.fromString(expectedBondType);
+            assertEquals(expected, found.getType(),
+                    "For pair " + pairKey + " expected " + expectedBondType + " but got " + found.getType());
+        }
+    }
+
+    @Test
+    void testUnknownEdgeAnnotationMapsToUnknown() throws Exception {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/rnaview/2K95_A.pdb.out")) {
+            ExtendedRNASecondaryStructure struct = parser.parse(is);
+            // Cerca la coppia con posizioni 14 e 44 (dopo normalizzazione: 13 e 43? Attenzione agli shift)
+            // RNAview internal numbers: 14 e 44 diventano 13 e 43 in 0‑based.
+            Pair unknownPair = struct.getPairs().stream()
+                    .filter(p -> (p.getPos1() == 13 && p.getPos2() == 43) ||
+                            (p.getPos1() == 43 && p.getPos2() == 13))
+                    .findFirst()
+                    .orElse(null);
+            assertNotNull(unknownPair, "Pair 14_44 not found");
+            assertEquals(BondType.UNKNOWN, unknownPair.getType(),
+                    "Annotation H/. dovrebbe dare UNKNOWN");
+        }
+    }
+
+    @Test
+    void testCanonicalPairsHaveCisOrTransCanonicalBondType() throws Exception {
+        // Verify that all canonical (standard W.C.) pairs are correctly labelled cWW (not tWW)
+        // because RNAview only outputs antiparallel Watson-Crick as "+/+ cis" or "-/- cis".
+        // (Parallel Watson-Crick is extremely rare and would be annotated differently.)
+        String[] files = {
+                "1YMO_A.pdb.out", "1YMO_A.pdb_sort.out",
+                "2K95_A.pdb.out", "2K95_A.pdb_sort.out",
+                "2M8K_A.pdb.out", "2M8K_A.pdb_sort.out",
+                "4PLX_A.pdb.out", "4PLX_A.pdb_sort.out"
+        };
+        for (String file : files) {
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/rnaview/" + file)) {
+                ExtendedRNASecondaryStructure struct = parser.parse(is);
+                for (Pair p : struct.getPairs()) {
+                    BondType bt = p.getType();
+                    if (bt.isCanonical()) {
+                        // In RNAview, canonical pairs are always cWW (cis Watson-Crick), never tWW.
+                        // tWW would appear only if the annotation were something like "+/+ trans" (non-existent).
+                        assertEquals(BondType.LEONTIS_WESTHOF_cWW, bt,
+                                "Canonical pair should be cWW, but found " + bt + " in " + file);
+                    }
+                }
+            }
         }
     }
 }
