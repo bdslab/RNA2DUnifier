@@ -151,12 +151,12 @@ public class JSONX3dnaListener extends JSONBaseListener {
             switch (val) {
                 case "nt1":
                     item = getItem(ctx);
-                    pairBuilder.setPos1(Integer.parseInt(item.substring(3)));
+                    pairBuilder.setPos1(Integer.parseInt(item.substring(3))-1);
                     pairBuilder.setNucleotide1(item.substring(2, 3));
                     break;
                 case "nt2":
                     item = getItem(ctx);
-                    pairBuilder.setPos2(Integer.parseInt(item.substring(3)));
+                    pairBuilder.setPos2(Integer.parseInt(item.substring(3))-1);
                     pairBuilder.setNucleotide2(item.substring(2, 3));
                     break;
                 case "LW":
