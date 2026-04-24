@@ -152,7 +152,9 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
      */
     @Override
     public void exitInteractionLine(BarnabaGrammarParser.InteractionLineContext ctx) {
-        this.structureBuilder.addPair(pairBuilder.build());
+        Pair pair = pairBuilder.build();
+        if (Math.abs(pair.getPos1() - pair.getPos2()) > 1 || !pair.getType().equals(BondType.STACKING))
+            this.structureBuilder.addPair(pair);
     }
 
     /**
