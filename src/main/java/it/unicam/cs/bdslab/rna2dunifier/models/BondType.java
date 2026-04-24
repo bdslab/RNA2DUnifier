@@ -90,8 +90,14 @@ public enum BondType {
         if (text == null) {
             return UNKNOWN;
         }
+
+        String normalized = text.toUpperCase();
+        normalized = normalized.replace("SH", "HS");
+        normalized = normalized.replace("SW", "WS");
+        normalized = normalized.replace("HW", "WH");
+
         for (BondType b : BondType.values()) {
-            if (b.info.equalsIgnoreCase(text)) {
+            if (b.info.equalsIgnoreCase(normalized)) {
                 return b;
             }
         }
