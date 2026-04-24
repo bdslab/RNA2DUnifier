@@ -188,7 +188,6 @@ class Fr3dParserTest {
     @DisplayName("4PLX_A – tSS bond type")
     void test4PLX_A_tSS() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A_A_basepair.json"));
-        System.out.println(s.toString());
         long tss = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_tSS).count();
         assertEquals(1, tss);
         // tSS pair (6,65) -> indices (5,39)
