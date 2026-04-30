@@ -132,7 +132,7 @@ class RnaUnifierIntegrationTest {
     @Test
     @DisplayName("process(File, X3DNA, extended=true) produce BPSEQ extended valid")
     void processX3dnaExtended() throws IOException, ParseException {
-        File f = resourceFile("rna-output/x3dna-dssr/1YMO_A_pair-only.json");
+        File f = resourceFile("rna-output/x3dna-dssr/1YMO_A_dssr.json");
         String result = unifier.process(f, ToolType.X3DNA, true);
 
         assertNotNull(result);
@@ -203,7 +203,7 @@ class RnaUnifierIntegrationTest {
     @Test
     @DisplayName("process(File, extended=true) with auto-detect on file X3DNA JSON")
     void processAutoDetectX3dna() throws IOException, ParseException {
-        File f = resourceFile("rna-output/x3dna-dssr/1YMO_A_pair-only.json");
+        File f = resourceFile("rna-output/x3dna-dssr/1YMO_A_dssr.json");
         String result = unifier.process(f, true);
 
         assertNotNull(result);

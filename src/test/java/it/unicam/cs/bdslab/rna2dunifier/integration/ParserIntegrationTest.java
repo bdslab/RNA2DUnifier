@@ -228,7 +228,7 @@ class ParserIntegrationTest {
     void x3dnaParsesFile() throws IOException, ParseException {
         ExtendedRNASecondaryStructure s = parse(
                 ToolType.X3DNA,
-                "rna-output/x3dna-dssr/1YMO_A_pair-only.json");
+                "rna-output/x3dna-dssr/1YMO_A_dssr.json");
 
         assertNotNull(s);
         assertFalse(s.getPairs().isEmpty());
@@ -239,7 +239,7 @@ class ParserIntegrationTest {
     void x3dnaPairCount() throws IOException, ParseException {
         ExtendedRNASecondaryStructure s = parse(
                 ToolType.X3DNA,
-                "rna-output/x3dna-dssr/1YMO_A_pair-only.json");
+                "rna-output/x3dna-dssr/1YMO_A_dssr.json");
 
         // Il file dichiara num_pairs: 22
         assertEquals(22, s.getPairs().size(),
@@ -277,7 +277,7 @@ class ParserIntegrationTest {
                 new Entry(ToolType.MCANNOTATE, "rna-output/mc-annotate/txt/1YMO_A.txt"),
                 new Entry(ToolType.BPNET, "rna-output/bpnet/1YMO_A.1YMO_A.out"),
                 new Entry(ToolType.RNAPOLIS, "rna-output/rnapolis/1YMO_A.3db"),
-                new Entry(ToolType.X3DNA, "rna-output/x3dna-dssr/1YMO_A_pair-only.json"),
+                new Entry(ToolType.X3DNA, "rna-output/x3dna-dssr/1YMO_A_dssr.json"),
         };
 
         for (Entry e : entries) {

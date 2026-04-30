@@ -96,7 +96,7 @@ class X3dnaParserTest {
     @Test
     @DisplayName("Pair‑only JSON – sequence is empty or null")
     void testPairOnlyJson_sequence() throws Exception {
-        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_pair-only.json"));
+        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_dssr.json"));
         // Pair‑only file has no sequence, we expect empty string (or null, but empty is safer)
         assertNotNull(s.getSequence());
         // Might be empty, but we don't enforce a specific value – just check it's not causing NPE
@@ -105,14 +105,14 @@ class X3dnaParserTest {
     @Test
     @DisplayName("Pair‑only JSON – total pairs count (22)")
     void testPairOnlyJson_totalPairs() throws Exception {
-        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_pair-only.json"));
+        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_dssr.json"));
         assertEquals(22, s.getPairs().size());
     }
 
     @Test
     @DisplayName("Pair‑only JSON – canonical count (15)")
     void testPairOnlyJson_canonicalCount() throws Exception {
-        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_pair-only.json"));
+        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_dssr.json"));
         long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
         assertEquals(15, cww);
     }
@@ -120,7 +120,7 @@ class X3dnaParserTest {
     @Test
     @DisplayName("Pair‑only JSON – specific pairs match the full JSON")
     void testPairOnlyJson_specificPairs() throws Exception {
-        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_pair-only.json"));
+        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_dssr.json"));
         // Same checks as in full JSON
         assertTrue(containsPair(s.getPairs(), 0, 28));
         assertTrue(containsPair(s.getPairs(), 4, 34));
