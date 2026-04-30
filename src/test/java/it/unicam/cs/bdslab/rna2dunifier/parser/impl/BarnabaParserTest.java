@@ -120,7 +120,7 @@ class BarnabaParserTest {
     @Test
     @DisplayName("4PLX_A_uncommon pairing – sequence unchanged, pairs same count")
     void test4PLX_A_uncommon() throws Exception {
-        ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.out.txt"));
+        ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.pdb.ANNOTATE.pairing.out"));
         assertEquals("NGAAGGUUUUUCUUUUCCUGAGGCGAAAGUCUCAGGUUUUGCUUUUUGGCCUUUCUUAAAAAAAAAAAAAGCAAAN", s.getSequence());
         assertEquals(37, s.getPairs().size());
     }
@@ -151,7 +151,6 @@ class BarnabaParserTest {
             "2K95_A.pdb.ANNOTATE.pairing.out",
             "2M8K_A.pdb.ANNOTATE.pairing.out",
             "4PLX_A.pdb.ANNOTATE.pairing.out",
-            "4PLX_A.out.txt",
             "4PLX_B.pdb.ANNOTATE.pairing.out",
             "4PLX_C.pdb.ANNOTATE.pairing.out"
     })

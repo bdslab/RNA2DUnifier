@@ -1,3 +1,4 @@
+# Loading /data/preprocessed/2M8K_A.pdb 
 # ./barnaba/bin/barnaba ANNOTATE --pdb /data/preprocessed/2M8K_A.pdb 
 #RES1       RES2       ANNO 
 # PDB 2M8K_A.pdb 

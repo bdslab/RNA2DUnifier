@@ -1,3 +1,4 @@
+# Loading /data/preprocessed/2M8K_A.pdb 
 # ./barnaba/bin/barnaba ANNOTATE --pdb /data/preprocessed/2M8K_A.pdb 
 #RES1       RES2       ANNO 
 # sequence G_1_0-G_2_0-U_3_0-U_4_0-U_5_0-C_6_0-U_7_0-U_8_0-U_9_0-U_10_0-U_11_0-A_12_0-G_13_0-U_14_0-G_15_0-A_16_0-U_17_0-U_18_0-U_19_0-U_20_0-U_21_0-C_22_0-C_23_0-A_24_0-A_25_0-A_26_0-C_27_0-C_28_0-C_29_0-C_30_0-U_31_0-U_32_0-U_33_0-G_34_0-U_35_0-G_36_0-C_37_0-A_38_0-A_39_0-A_40_0-A_41_0-A_42_0-U_43_0-C_44_0-A_45_0-U_46_0-U_47_0-A_48_0

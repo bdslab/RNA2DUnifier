@@ -1,3 +1,6 @@
+# Loading /data/preprocessed/4PLX_A.pdb 
+# Skipping unknown residue GTP1 
+# Skipping unknown residue A2376 
 # ./barnaba/bin/barnaba ANNOTATE --pdb /data/preprocessed/4PLX_A.pdb 
 #RES1       RES2       ANNO 
 # PDB 4PLX_A.pdb 
