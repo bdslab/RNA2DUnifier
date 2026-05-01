@@ -5,6 +5,8 @@ import it.unicam.cs.bdslab.barnaba.BarnabaGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -29,6 +31,8 @@ import java.util.*;
  */
 public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
 
+    private static final Logger logger = LoggerFactory.getLogger(BarnabaCustomListener.class);
+
     /** Builder for the final RNA secondary structure. */
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
 
@@ -46,12 +50,6 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
 
     /** Number of uncommon residues skipped so far. */
     private int uncommonResidues = 0;
-
-    /** Last processed PDB residue number. */
-    private int lastPosition = 0;
-
-    /** Cumulative offset to align original positions with reconstructed indices. */
-    private int differencePosition = 0;
 
     /** Flag indicating whether the first nucleotide of the current pair has been set. */
     private boolean nt1Viewed = false;
@@ -84,6 +82,9 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
      */
     @Override
     public void exitBarnabaFile(BarnabaGrammarParser.BarnabaFileContext ctx) {
+        if (uncommonResidues > 0) {
+            logger.info("Total uncommon residues skipped (no placeholders inserted): {}", uncommonResidues);
+        }
         this.structure = structureBuilder.build();
     }
 
@@ -95,15 +96,20 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
      */
     @Override
     public void enterResidueSpec(BarnabaGrammarParser.ResidueSpecContext ctx) {
-        int pos = nucleotidePositionMap.get(Integer.parseInt(ctx.INT().getFirst().getText()));
+        int pdbNumber = Integer.parseInt(ctx.INT().getFirst().getText());
+        Integer index = nucleotidePositionMap.get(pdbNumber);
+        if (index == null) {
+            logger.warn("Residue {} appears in interaction but was not found in sequence mapping. Skipping pair.", pdbNumber);
+            return;
+        }
         if (!nt1Viewed) {
             nt1Viewed = true;
             this.pairBuilder.setNucleotide1(ctx.NUCLEOTIDE().getText());
-            this.pairBuilder.setPos1(pos);
+            this.pairBuilder.setPos1(index);
         } else {
             nt1Viewed = false;
             this.pairBuilder.setNucleotide2(ctx.NUCLEOTIDE().getText());
-            this.pairBuilder.setPos2(pos);
+            this.pairBuilder.setPos2(index);
         }
     }
 
@@ -176,16 +182,13 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
         switch (splittedComment[0]) {
             case "Skipping":
                 uncommonResidues++;
+                logger.warn("Skipping an uncommon residue (no placeholder inserted)");
                 break;
             case "sequence":
                 String sequenceRaw = splittedComment[1];
                 Arrays.stream(sequenceRaw.split("-")).forEach(this::enterSequenceElement);
                 StringBuilder seq = new StringBuilder();
                 sequence.forEach(seq::append);
-                while (uncommonResidues-- > 0) {
-                    // Fill position of uncommon residue
-                    seq.append("N");
-                }
                 structureBuilder = structureBuilder.setSequence(seq.toString());
                 break;
             case "PDB":
@@ -204,59 +207,16 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
     private void enterSequenceElement(String element) {
         String[] elements = element.split("_");
 
+        if (elements.length != 3) {
+            logger.warn("Malformed sequence element: {}", element);
+            return;
+        }
+
         String nucleotide = elements[0];
 
         int elPosition = Integer.parseInt(elements[1]);
-        int i = 0;
 
-        if (nucleotidePositionMap.isEmpty()) {
-            // Fill position of uncommon residue before the first element
-            int gapStartPosition = elPosition - 1;
-            if (elPosition > 1) {
-                while (gapStartPosition > 0 && uncommonResidues > 0) {
-                    gapStartPosition--;
-                    uncommonResidues--;
-                    nucleotidePositionMap.put(i, i); // 0-index
-                    appendNucleotide("N", i++);
-                }
-            }
-            differencePosition = gapStartPosition + 1;
-            lastPosition = elPosition;
-        } else if (elPosition - lastPosition > 1) {
-            // Fill position of uncommon residue
-            int difference = elPosition - lastPosition;
-            while (difference > 1 && uncommonResidues > 0) {
-                difference--;
-            }
-
-            /*
-             * Remove the jump in the sequence
-             * from: GGGCUGUUUUUCUCGCUGACUUUCAGCCC       CAAACAAAAAAUGUCAGCA
-             * to:   GGGCUGUUUUUCUCGCUGACUUUCAGCCCCAAACAAAAAAUGUCAGCA
-             */
-            differencePosition += elPosition - lastPosition - 1;
-            lastPosition = elPosition;
-            i = elPosition - differencePosition;
-        } else {
-            lastPosition = elPosition;
-            i = elPosition - differencePosition;
-        }
-
-        nucleotidePositionMap.put(elPosition, i); // 0-index
-        appendNucleotide(nucleotide, i);
-    }
-
-    /**
-     * Appends a nucleotide character at the given index, padding the sequence list
-     * with spaces if necessary to ensure the index is within bounds.
-     *
-     * @param nucleotide the nucleotide character (e.g., "A", "C", "G", "U", "N")
-     * @param index      the zero‑based position at which to insert the nucleotide
-     */
-    private void appendNucleotide(String nucleotide, int index) {
-        while (sequence.size() < index) {
-            sequence.add(" ");
-        }
+        nucleotidePositionMap.put(elPosition, sequence.size()); // 0-index
         sequence.add(nucleotide);
     }
 }
