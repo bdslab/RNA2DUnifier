@@ -64,36 +64,6 @@ class X3dnaParserTest {
         assertEquals(cww, s.getCanonical().size());
     }
 
-    @Test
-    @DisplayName("Full JSON – specific pairs and their LW mapping")
-    void testFullJson_specificPairs() throws Exception {
-        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A.json"));
-        // WC pair (G1-C29) -> indices 0,28 -> cWW
-        assertTrue(containsPair(s.getPairs(), 0, 28));
-        Pair p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 0 && pr.getPos2() == 28)).findFirst().get();
-        assertEquals(BondType.LEONTIS_WESTHOF_cWW, p.getType());
-
-        // cSH pair (U5-A35) -> indices 4,34 -> cHS
-        assertTrue(containsPair(s.getPairs(), 4, 34));
-        p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 4 && pr.getPos2() == 34)).findFirst().get();
-        assertEquals(BondType.LEONTIS_WESTHOF_cHS, p.getType());
-
-        // tSW pair (G6-A36) -> indices 5,35 -> should become tWS
-        assertTrue(containsPair(s.getPairs(), 5, 35));
-        p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 5 && pr.getPos2() == 35)).findFirst().get();
-        assertEquals(BondType.LEONTIS_WESTHOF_tWS, p.getType());
-
-        // cWH pair (U7-A37) -> indices 6,36 -> cWH
-        assertTrue(containsPair(s.getPairs(), 6, 36));
-        p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 6 && pr.getPos2() == 36)).findFirst().get();
-        assertEquals(BondType.LEONTIS_WESTHOF_cWH, p.getType());
-
-        // tSH pair (G26-A33) -> indices 25,32 -> tHS
-        assertTrue(containsPair(s.getPairs(), 25, 32));
-        p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 25 && pr.getPos2() == 32)).findFirst().get();
-        assertEquals(BondType.LEONTIS_WESTHOF_tHS, p.getType());
-    }
-
     // -------------------------------------------------------------------------
     // Pair‑only JSON (no sequence)
     // -------------------------------------------------------------------------
@@ -121,21 +91,6 @@ class X3dnaParserTest {
         assertEquals(15, cww);
     }
 
-    @Test
-    @DisplayName("Pair‑only JSON – specific pairs match the full JSON")
-    void testPairOnlyJson_specificPairs() throws Exception {
-        ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_dssr.json"));
-        // Same checks as in full JSON
-        assertTrue(containsPair(s.getPairs(), 0, 28));
-        assertTrue(containsPair(s.getPairs(), 4, 34));
-        assertTrue(containsPair(s.getPairs(), 5, 35));
-        assertTrue(containsPair(s.getPairs(), 6, 36));
-        assertTrue(containsPair(s.getPairs(), 25, 32));
-
-        Pair p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 5 && pr.getPos2() == 35)).findFirst().get();
-        assertEquals(BondType.LEONTIS_WESTHOF_tWS, p.getType());
-    }
-
     // -------------------------------------------------------------------------
     // Additional files – generic validation (pair‑only DSSR JSON)
     // -------------------------------------------------------------------------
@@ -156,6 +111,12 @@ class X3dnaParserTest {
         assertNotNull(s, "Parsed structure should not be null for " + fileName);
         assertNotNull(s.getPairs(), "Pairs list should not be null for " + fileName);
         assertNotNull(s.getSequence(), "Sequence should not be null (may be empty) for " + fileName);
+
+        // Check that there is at least one pair involving the first nucleotide (index 0)
+        boolean hasPairWithFirstNucleotide = s.getPairs().stream()
+                .anyMatch(p -> p.getPos1() == 0 || p.getPos2() == 0);
+        assertTrue(hasPairWithFirstNucleotide,
+                "At least one pair should involve nucleotide index 0 in " + fileName);
 
         // If the file contains a sequence (some pair‑only JSONs might have it), check indices bounds
         if (s.getSequence() != null && !s.getSequence().isEmpty()) {

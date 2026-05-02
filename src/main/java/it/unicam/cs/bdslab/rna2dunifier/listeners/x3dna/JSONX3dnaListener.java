@@ -8,7 +8,7 @@ import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Stack;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +45,9 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
     /** Stack tracking JSON object member names (keys) to maintain context. */
     private final Stack<String> positionStack = new Stack<>();
+
+    /** position map to normalize nucleotide positions */
+    private final Map<Integer, Integer> positionMap = new HashMap<>();
 
     /** Flag indicating whether we are inside the "pairs" array. */
     private boolean inPairs = false;
@@ -130,6 +133,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
             switch (positionStack.peek()) {
                 case "pairs":
                     inPairs = true;
+                    buildPositionMap(ctx);
                     break;
                 case "nts":
                     inNts = true;
@@ -206,6 +210,18 @@ public class JSONX3dnaListener extends JSONBaseListener {
     }
 
     private void buildPair(String val, boolean nt1) {
+        String[] n = extractNucleotideValue(val);
+
+        if (nt1) {
+            pairBuilder.setPos1(positionMap.get(Integer.parseInt(n[1])));
+            pairBuilder.setNucleotide1(n[0]);
+        } else {
+            pairBuilder.setPos2(positionMap.get(Integer.parseInt(n[1])));
+            pairBuilder.setNucleotide2(n[0]);
+        }
+    }
+
+    private String[] extractNucleotideValue(String val) {
         String regex = "^(?:([A-Z]+[0-9]+)/([0-9]+)|([A-Z]+)([0-9]+))$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(val);
@@ -224,7 +240,6 @@ public class JSONX3dnaListener extends JSONBaseListener {
             }
         } else {
             logger.warn("Unrecognised residue format: '{}'. Expected patterns: 'LETTERS+DIGITS/DIGITS' or 'LETTERS+DIGITS'", val);
-            return;
         }
 
         if (nucleotide != null && nucleotide.length() > 1) {
@@ -232,13 +247,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
             nucleotide = nucleotide.substring(0, 1);
         }
 
-        if (nt1) {
-            pairBuilder.setPos1(index);
-            pairBuilder.setNucleotide1(nucleotide);
-        } else {
-            pairBuilder.setPos2(index);
-            pairBuilder.setNucleotide2(nucleotide);
-        }
+        return new String[]{nucleotide, String.valueOf(index)};
     }
 
     private void buildSequence(String val, JSONParser.MemberContext ctx) {
@@ -276,5 +285,25 @@ public class JSONX3dnaListener extends JSONBaseListener {
             inPairs = false;
             inNts = false;
         }
+    }
+
+    private void buildPositionMap(JSONParser.MemberContext ctx) {
+        Set<Integer> positions = new HashSet<>();
+        ctx.value().array().value().forEach(value ->
+            value.object().member().forEach(member -> {
+                String info = member.STRING().getText().replaceAll("\"", "");
+                if(Objects.equals(info, "nt1") || Objects.equals(info, "nt2")) {
+                    String val = getItem(member);
+                    String[] n = extractNucleotideValue(extractResidueIdentifier(val));
+                    positions.add(Integer.parseInt(n[1]));
+                }
+            })
+        );
+
+        logger.warn("Normalizing residue positions");
+
+        positions.stream()
+                .sorted()
+                .forEach(position -> positionMap.put(position, positionMap.size()));
     }
 }
