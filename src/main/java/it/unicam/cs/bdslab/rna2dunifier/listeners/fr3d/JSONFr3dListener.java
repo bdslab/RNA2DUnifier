@@ -5,6 +5,8 @@ import it.unicam.cs.bdslab.JSON.JSONParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
  * @see BondType
  */
 public class JSONFr3dListener extends JSONBaseListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(JSONFr3dListener.class);
 
     /** Builder for the final RNA secondary structure. */
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
@@ -66,6 +70,7 @@ public class JSONFr3dListener extends JSONBaseListener {
     @Override
     public void enterJson(JSONParser.JsonContext ctx) {
         this.structureBuilder = new ExtendedRNASecondaryStructure.Builder();
+        logger.debug("Started parsing FR3D JSON file");
     }
 
     /**
@@ -77,6 +82,9 @@ public class JSONFr3dListener extends JSONBaseListener {
     @Override
     public void exitJson(JSONParser.JsonContext ctx) {
         this.structure = structureBuilder.build();
+        logger.info("Finished FR3D parsing: sequence length={}, pairs={}",
+                structure.getSequence() != null ? structure.getSequence().length() : 0,
+                structure.getPairs().size());
     }
 
     /**
@@ -127,10 +135,14 @@ public class JSONFr3dListener extends JSONBaseListener {
         } else {
             switch (memberName) {
                 case "pdb_id":
-                    structureBuilder.addHeaderInfo("PDB ID", ctx.value().STRING().getText());
+                    String pdbId = ctx.value().STRING().getText().replaceAll("\"", "");
+                    structureBuilder.addHeaderInfo("PDB ID", pdbId);
+                    logger.debug("PDB ID: {}", pdbId);
                     break;
                 case "chain_id":
-                    structureBuilder.addHeaderInfo("Chain ID", ctx.value().STRING().getText());
+                    String chainId = ctx.value().STRING().getText().replaceAll("\"", "");
+                    structureBuilder.addHeaderInfo("Chain ID", chainId);
+                    logger.debug("Chain ID: {}", chainId);
                     break;
                 case "annotations":
                     enterAnnotations(ctx);
@@ -154,9 +166,13 @@ public class JSONFr3dListener extends JSONBaseListener {
      */
     private void enterAnnotations(JSONParser.MemberContext ctx) {
         inAnnotations = true;
-        addToPositions(ctx.value().array().value().stream()
+        logger.debug("Entering annotations array");
+
+        // Collect all seq_id references from annotations
+        List<JSONParser.ObjectContext> annotationObjects = ctx.value().array().value().stream()
                 .map(JSONParser.ValueContext::object)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+        addToPositions(annotationObjects);
 
         List<Integer> sortedPositions = new ArrayList<>(positions);
         Collections.sort(sortedPositions);
@@ -165,6 +181,7 @@ public class JSONFr3dListener extends JSONBaseListener {
         for (Integer position : sortedPositions) {
             positionMap.put(position, i++);
         }
+        logger.info("Built position map: {} residues (original IDs → 0‑based indices)", positionMap.size());
     }
 
     /**
@@ -176,10 +193,15 @@ public class JSONFr3dListener extends JSONBaseListener {
     private void addToPositions(List<JSONParser.ObjectContext> objects) {
         objects.forEach(obj ->
                 obj.member().stream()
-                        .filter(s -> s.STRING().getText().contains("seq_id1") ||
-                                s.STRING().getText().contains("seq_id2") ||
-                                s.STRING().getText().contains("seq_id"))
-                        .forEach(s -> positions.add(Integer.parseInt(s.value().STRING().getText().replaceAll("\"", ""))))
+                        .filter(s -> {
+                            String name = s.STRING().getText().replaceAll("\"", "");
+                            return name.contains("seq_id1") || name.contains("seq_id2") || name.contains("seq_id");
+                        })
+                        .forEach(s -> {
+                            int seqId = Integer.parseInt(s.value().STRING().getText().replaceAll("\"", ""));
+                            positions.add(seqId);
+                            logger.trace("Added sequence ID: {}", seqId);
+                        })
         );
     }
 
@@ -204,19 +226,46 @@ public class JSONFr3dListener extends JSONBaseListener {
 
         switch (item) {
             case "seq_id1":
-                pairBuilder.setPos1(positionMap.get(Integer.parseInt(val)));
+                int orig1 = Integer.parseInt(val);
+                Integer zero1 = positionMap.get(orig1);
+                if (zero1 == null) {
+                    logger.warn("seq_id1 {} not found in position map", orig1);
+                } else {
+                    pairBuilder.setPos1(zero1);
+                    logger.trace("Set pos1: {} → {}", orig1, zero1);
+                }
                 break;
             case "seq_id2":
-                pairBuilder.setPos2(positionMap.get(Integer.parseInt(val)));
+                int orig2 = Integer.parseInt(val);
+                Integer zero2 = positionMap.get(orig2);
+                if (zero2 == null) {
+                    logger.warn("seq_id2 {} not found in position map", orig2);
+                } else {
+                    pairBuilder.setPos2(zero2);
+                    logger.trace("Set pos2: {} → {}", orig2, zero2);
+                }
                 break;
             case "nt1":
+                if (val.length() > 1) {
+                    logger.warn("Uncommon residue for nt1: '{}' (length >1) – storing as is, but may be non‑standard", val);
+                }
                 pairBuilder.setNucleotide1(val);
+                logger.trace("Set nt1: {}", val);
                 break;
             case "nt2":
+                if (val.length() > 1) {
+                    logger.warn("Uncommon residue for nt2: '{}' (length >1) – storing as is, but may be non‑standard", val);
+                }
                 pairBuilder.setNucleotide2(val);
+                logger.trace("Set nt2: {}", val);
                 break;
             case "bp":
-                pairBuilder.setType(BondType.fromString(val));
+                BondType type = BondType.fromString(val);
+                if (type == null || type == BondType.UNKNOWN) {
+                    logger.warn("Unknown bond type '{}'", val);
+                }
+                pairBuilder.setType(type);
+                logger.trace("Set bond type: {}", val);
                 break;
         }
     }
@@ -233,6 +282,7 @@ public class JSONFr3dListener extends JSONBaseListener {
         positionStack.pop();
         if (positionStack.isEmpty()) {
             inAnnotations = false;
+            logger.debug("Exited annotations mode");
         }
     }
 }
