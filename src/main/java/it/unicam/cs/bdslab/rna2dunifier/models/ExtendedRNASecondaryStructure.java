@@ -1,9 +1,6 @@
 package it.unicam.cs.bdslab.rna2dunifier.models;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents an extended RNA secondary structure, including the nucleotide sequence,
@@ -91,6 +88,14 @@ public class ExtendedRNASecondaryStructure {
      */
     public List<Pair> getCanonical() {
         return canonical;
+    }
+
+    /**
+     * Return the header infos of the structure
+     * @return the header infos
+     */
+    public Map<String, String> getHeaderInfo() {
+        return Collections.unmodifiableMap(headerInfo);
     }
 
     /**

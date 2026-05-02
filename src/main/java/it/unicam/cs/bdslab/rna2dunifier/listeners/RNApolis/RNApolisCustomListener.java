@@ -5,6 +5,8 @@ import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarBaseListener;
 import it.unicam.cs.bdslab.rnapolis.RNApolisGrammarParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -28,6 +30,8 @@ import java.util.*;
  * @see BondType
  */
 public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(RNApolisCustomListener.class);
 
     /** List of all secondary structures parsed from the input (one per strand). */
     private final List<ExtendedRNASecondaryStructure> structures = new ArrayList<>();
@@ -59,6 +63,7 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
     @Override
     public void enterStrandSection(RNApolisGrammarParser.StrandSectionContext ctx) {
         this.currentStructureBuilder = new ExtendedRNASecondaryStructure.Builder();
+        logger.debug("Starting new strand section");
     }
 
     /**
@@ -69,7 +74,11 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
      */
     @Override
     public void exitStrandSection(RNApolisGrammarParser.StrandSectionContext ctx) {
-        this.structures.add(this.currentStructureBuilder.build());
+        ExtendedRNASecondaryStructure structure = this.currentStructureBuilder.build();
+        this.structures.add(structure);
+        logger.info("Finished strand: {} with {} pairs",
+                structure.getHeaderInfo().getOrDefault("strand_name", "unknown"),
+                structure.getPairs().size());
     }
 
     /**
@@ -81,7 +90,9 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
      */
     @Override
     public void enterHeader(RNApolisGrammarParser.HeaderContext ctx) {
-        this.currentStructureBuilder.addHeaderInfo("strand_name", ctx.HEADER_STRING().getText().substring(1));
+        String header = ctx.HEADER_STRING().getText().substring(1);
+        this.currentStructureBuilder.addHeaderInfo("strand_name", header);
+        logger.debug("Header: {}", header);
     }
 
     /**
@@ -94,6 +105,7 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
     public void enterSequence(RNApolisGrammarParser.SequenceContext ctx) {
         this.currentSequence = ctx.NUCLEOTIDE_SEQUENCE().getText();
         this.currentStructureBuilder.setSequence(this.currentSequence);
+        logger.debug("Sequence length: {}", this.currentSequence.length());
     }
 
     /**
@@ -105,8 +117,17 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
      */
     @Override
     public void enterInteraction(RNApolisGrammarParser.InteractionContext ctx) {
-        this.currentInteractionType = BondType.fromString(ctx.INTERACTION_TYPE().getText());
-        buildPairs(ctx.INTERACTION_SEQUENCE().getText());
+        String typeStr = ctx.INTERACTION_TYPE().getText();
+        this.currentInteractionType = BondType.fromString(typeStr);
+        if (this.currentInteractionType == null) {
+            logger.warn("Unknown interaction type '{}' – pairs will have unknown BondType", typeStr);
+        }
+        String interactionSeq = ctx.INTERACTION_SEQUENCE().getText();
+        if (currentSequence != null && interactionSeq.length() != currentSequence.length()) {
+            logger.warn("Interaction sequence length ({}) does not match nucleotide sequence length ({}). " +
+                    "Pairs may be out of bounds.", interactionSeq.length(), currentSequence.length());
+        }
+        buildPairs(interactionSeq);
     }
 
     /**
@@ -144,38 +165,52 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
         // Open symbols stacks
         Map<Character, Stack<Integer>> stacks = new HashMap<>();
 
-        // Iteration pattern
+        // Iterate over the interaction sequence
         for (int i = 0; i < interactionSequence.length(); i++) {
             char symbol = interactionSequence.charAt(i);
 
+            // Skip non‑bond characters (dots)
+            if (symbol == '.') {
+                continue;
+            }
+
             if (openToClose.containsKey(symbol)) {
-                // push to corresponding stack
+                // Push opening position onto the corresponding stack
                 stacks.computeIfAbsent(symbol, k -> new Stack<>()).push(i);
             }
             else if (closeToOpen.containsKey(symbol)) {
-                // find opening symbol
                 char openChar = closeToOpen.get(symbol);
                 Stack<Integer> stack = stacks.get(openChar);
                 if (stack != null && !stack.isEmpty()) {
-                    int openPos = stack.pop(); // last opening position
-                    // create pair
-                    this.currentStructureBuilder.addPair(
-                            new Pair(openPos, i, // 0-index
-                                    String.valueOf(currentSequence.charAt(openPos)),
-                                    String.valueOf(currentSequence.charAt(i)),
-                                    currentInteractionType)
-                    );
+                    int openPos = stack.pop();
+                    // Create pair only if indices are within sequence bounds
+                    if (currentSequence != null && openPos < currentSequence.length() && i < currentSequence.length()) {
+                        Pair p = new Pair(
+                                openPos, i,
+                                String.valueOf(currentSequence.charAt(openPos)),
+                                String.valueOf(currentSequence.charAt(i)),
+                                currentInteractionType
+                        );
+                        this.currentStructureBuilder.addPair(p);
+                        logger.trace("Added pair: {}–{} ({}‑{})", openPos, i,
+                                currentSequence.charAt(openPos), currentSequence.charAt(i));
+                    } else {
+                        logger.warn("Skipping pair at indices ({}, {}) – out of sequence length {}",
+                                openPos, i, currentSequence != null ? currentSequence.length() : "null");
+                    }
                 } else {
-                    // No opening found ERROR!
-                    System.err.println("Closing without opening: " + symbol + " at position " + i);
+                    logger.warn("Closing symbol '{}' at position {} has no matching opening symbol.", symbol, i);
                 }
+            } else {
+                logger.warn("Unrecognised character '{}' at position {} – ignoring.", symbol, i);
             }
         }
 
-        // Check opening not closed
+        // Check for any unclosed openings
         for (Map.Entry<Character, Stack<Integer>> e : stacks.entrySet()) {
             if (!e.getValue().isEmpty()) {
-                System.err.println("Symbol " + e.getKey() + " has " + e.getValue().size() + " opening not closed");
+                logger.warn("Symbol '{}' has {} unmatched opening(s) at positions: {}",
+                        e.getKey(), e.getValue().size(), e.getValue());
             }
         }
     }
