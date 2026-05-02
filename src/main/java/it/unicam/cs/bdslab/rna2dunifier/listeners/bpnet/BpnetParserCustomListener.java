@@ -5,6 +5,8 @@ import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +29,8 @@ import java.util.Set;
  * @see BondType
  */
 public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(BpnetParserCustomListener.class);
 
     /** Builder for the final RNA secondary structure. */
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
@@ -61,6 +65,7 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
     @Override
     public void enterBpnetFile(BpnetGrammarParser.BpnetFileContext ctx) {
         structureBuilder = new ExtendedRNASecondaryStructure.Builder();
+        logger.debug("Started parsing bpnet file");
     }
 
     /**
@@ -73,6 +78,7 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
     public void exitBpnetFile(BpnetGrammarParser.BpnetFileContext ctx) {
         structureBuilder.setSequence(sequence.toString());
         pairs.forEach(pair -> structureBuilder.addPair(pair));
+        logger.info("Finished bpnet file: sequence length = {}, total pairs = {}", sequence.length(), pairs.size());
     }
 
     /**
@@ -88,6 +94,7 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
         currentNucleotide = String.valueOf(ctx.TEXT().getFirst().getText().charAt(0));
 
         sequence.append(currentNucleotide);
+        logger.trace("Added residue {}: {}", currentPosition, currentNucleotide);
     }
 
     /**
@@ -101,12 +108,17 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
      */
     @Override
     public void enterPair(BpnetGrammarParser.PairContext ctx) {
+        BondType type = getType(ctx.BOND().getText());
+        if (type == null) {
+            logger.warn("Bond type is null for pair {}‑{} (bond={})",
+                    currentPosition, Integer.parseInt(ctx.INT().getFirst().getText()), ctx.BOND().getText());
+        }
         pairs.add(new Pair(
                 currentPosition - 1,
                 Integer.parseInt(ctx.INT().getFirst().getText()) - 1,
                 currentNucleotide,
                 ctx.TEXT().getFirst().getText(),
-                getType(ctx.BOND().getText()))
+                type)
         );
     }
 
@@ -124,7 +136,12 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
         String edge2 = convertEdge(bond.substring(2, 3));
         String orientation = bond.substring(3).toLowerCase();
 
-        return BondType.fromString(orientation + edge1 + edge2);
+        BondType result = BondType.fromString(orientation + edge1 + edge2);
+        if (result == null) {
+            logger.warn("BondType.fromString returned null for bond={}, orientation={}, edge1={}, edge2={}",
+                    bond, orientation, edge1, edge2);
+        }
+        return result;
     }
 
     /**
@@ -144,11 +161,15 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
      */
     private String convertEdge(String edge) {
         if (edge.toLowerCase().matches("[whs]")) return edge.toUpperCase();
-        return switch (edge) {
-            case "+" -> "W";
-            case "z" -> "S";
-            case "g" -> "H";
-            default -> "?";
-        };
+        String result;
+        switch (edge) {
+            case "+": result = "W"; break;
+            case "z": result = "S"; break;
+            case "g": result = "H"; break;
+            default:
+                result = "?";
+                logger.warn("Unrecognised edge code '{}' – using '?'", edge);
+        }
+        return result;
     }
 }
