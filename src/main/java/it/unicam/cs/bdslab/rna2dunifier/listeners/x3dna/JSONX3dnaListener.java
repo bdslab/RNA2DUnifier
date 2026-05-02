@@ -5,6 +5,8 @@ import it.unicam.cs.bdslab.JSON.JSONParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -26,6 +28,8 @@ import java.util.regex.Pattern;
  * @see BondType
  */
 public class JSONX3dnaListener extends JSONBaseListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(JSONX3dnaListener.class);
 
     /** Builder for the final RNA secondary structure. */
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
@@ -124,8 +128,13 @@ public class JSONX3dnaListener extends JSONBaseListener {
         positionStack.push(val);
         if (positionStack.size() == 1) {
             switch (positionStack.peek()) {
-                case "pairs": inPairs = true; break;
-                // case "nts":   inNts   = true; break;
+                case "pairs":
+                    inPairs = true;
+                    break;
+                case "nts":
+                    inNts = true;
+                    logger.warn("Sequence information ('nts' array) is present in JSON but ignored by this parser.");
+                    break;
             }
         }
     }
@@ -152,11 +161,17 @@ public class JSONX3dnaListener extends JSONBaseListener {
             switch (val) {
                 case "nt1":
                     item = getItem(ctx);
-                    buildPair(item.split("\\.")[1], true);
+                    String residue1 = extractResidueIdentifier(item);
+                    if (residue1 != null) {
+                        buildPair(residue1, true);
+                    }
                     break;
                 case "nt2":
                     item = getItem(ctx);
-                    buildPair(item.split("\\.")[1], false);
+                    String residue2 = extractResidueIdentifier(item);
+                    if (residue2 != null) {
+                        buildPair(residue2, false);
+                    }
                     break;
                 case "LW":
                     item = getItem(ctx);
@@ -166,10 +181,32 @@ public class JSONX3dnaListener extends JSONBaseListener {
         }
     }
 
+    /**
+     * Extracts the residue identifier part from a full identifier like "A.A1".
+     * Expected format: chain.residue (e.g., "A.A1").
+     * If a dot is present, returns the part after the dot.
+     *
+     * @param fullIdentifier the raw string from the JSON
+     * @return the residue identifier (e.g., "A1") or {@code null} if format is invalid
+     */
+    private String extractResidueIdentifier(String fullIdentifier) {
+        if (fullIdentifier == null || fullIdentifier.isEmpty()) {
+            logger.warn("Empty or null residue identifier encountered.");
+            return null;
+        }
+        String[] parts = fullIdentifier.split("\\.");
+        if (parts.length < 2) {
+            logger.warn("Residue identifier '{}' does not contain a dot ('.') – assuming the whole string is the residue part.", fullIdentifier);
+            return fullIdentifier;
+        }
+        if (parts.length > 2) {
+            logger.warn("Residue identifier '{}' contains multiple dots – using part after first dot: '{}'", fullIdentifier, parts[1]);
+        }
+        return parts[1];
+    }
+
     private void buildPair(String val, boolean nt1) {
-
         String regex = "^(?:([A-Z]+[0-9]+)/([0-9]+)|([A-Z]+)([0-9]+))$";
-
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(val);
 
@@ -185,10 +222,14 @@ public class JSONX3dnaListener extends JSONBaseListener {
                 nucleotide = matcher.group(3);
                 index += Integer.parseInt(matcher.group(4));
             }
+        } else {
+            logger.warn("Unrecognised residue format: '{}'. Expected patterns: 'LETTERS+DIGITS/DIGITS' or 'LETTERS+DIGITS'", val);
+            return;
         }
 
-        if(nucleotide != null && nucleotide.length() > 1) {
-            nucleotide = nucleotide.substring(0,1);
+        if (nucleotide != null && nucleotide.length() > 1) {
+            logger.warn("Nucleotide string '{}' has length >1 – truncating to first character (uncommon residue) '{}'.", nucleotide, nucleotide.substring(0, 1));
+            nucleotide = nucleotide.substring(0, 1);
         }
 
         if (nt1) {
@@ -198,8 +239,6 @@ public class JSONX3dnaListener extends JSONBaseListener {
             pairBuilder.setPos2(index);
             pairBuilder.setNucleotide2(nucleotide);
         }
-
-        System.out.println(nucleotide + "-" + index);
     }
 
     private void buildSequence(String val, JSONParser.MemberContext ctx) {
@@ -212,16 +251,21 @@ public class JSONX3dnaListener extends JSONBaseListener {
      * Extracts the string value from a member context (removing surrounding quotes).
      *
      * @param ctx the member context
-     * @return the unquoted string value
+     * @return the unquoted string value, or an empty string if the value is not a STRING
      */
     private String getItem(JSONParser.MemberContext ctx) {
-        return ctx.value().STRING().getText().replaceAll("\"", "");
+        if (ctx.value().STRING() != null) {
+            return ctx.value().STRING().getText().replaceAll("\"", "");
+        } else {
+            logger.warn("Expected STRING value but found different type – returning empty string.");
+            return "";
+        }
     }
 
     /**
      * Called when exiting a {@code member} rule.
      * Pops the member name from the stack and, if the stack becomes empty,
-     * exits the "pairs" mode.
+     * exits the "pairs" and "nts" modes.
      *
      * @param ctx the parse tree context
      */
