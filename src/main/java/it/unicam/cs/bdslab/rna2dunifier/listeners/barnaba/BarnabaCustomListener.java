@@ -182,7 +182,7 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
         switch (splittedComment[0]) {
             case "Skipping":
                 uncommonResidues++;
-                logger.warn("Skipping an uncommon residue (no placeholder inserted)");
+                logger.warn("{} (no placeholder inserted)", comment);
                 break;
             case "sequence":
                 String sequenceRaw = splittedComment[1];
