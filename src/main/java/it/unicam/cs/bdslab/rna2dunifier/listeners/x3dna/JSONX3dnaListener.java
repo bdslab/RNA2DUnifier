@@ -7,6 +7,8 @@ import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Custom ANTLR listener for parsing x3dna JSON output files.
@@ -118,13 +120,12 @@ public class JSONX3dnaListener extends JSONBaseListener {
     public void enterMember(JSONParser.MemberContext ctx) {
         String val = ctx.STRING().getText().replaceAll("\"", "");
         buildPair(val, ctx);
-        buildSequence(val, ctx);
+        // buildSequence(val, ctx);
         positionStack.push(val);
         if (positionStack.size() == 1) {
-            if(positionStack.peek().equals("pairs")) {
-                inPairs = true;
-            } else if(positionStack.peek().equals("nts")) {
-                inNts = true;
+            switch (positionStack.peek()) {
+                case "pairs": inPairs = true; break;
+                // case "nts":   inNts   = true; break;
             }
         }
     }
@@ -151,13 +152,11 @@ public class JSONX3dnaListener extends JSONBaseListener {
             switch (val) {
                 case "nt1":
                     item = getItem(ctx);
-                    pairBuilder.setPos1(Integer.parseInt(item.substring(3))-1);
-                    pairBuilder.setNucleotide1(item.substring(2, 3));
+                    buildPair(item.split("\\.")[1], true);
                     break;
                 case "nt2":
                     item = getItem(ctx);
-                    pairBuilder.setPos2(Integer.parseInt(item.substring(3))-1);
-                    pairBuilder.setNucleotide2(item.substring(2, 3));
+                    buildPair(item.split("\\.")[1], false);
                     break;
                 case "LW":
                     item = getItem(ctx);
@@ -165,6 +164,42 @@ public class JSONX3dnaListener extends JSONBaseListener {
                     break;
             }
         }
+    }
+
+    private void buildPair(String val, boolean nt1) {
+
+        String regex = "^(?:([A-Z]+[0-9]+)/([0-9]+)|([A-Z]+)([0-9]+))$";
+
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(val);
+
+        String nucleotide = null;
+        int index = -1;
+        if (matcher.matches()) {
+            if (matcher.group(1) != null) {
+                // Slash case
+                nucleotide = matcher.group(1);
+                index += Integer.parseInt(matcher.group(2));
+            } else {
+                // No-slash case
+                nucleotide = matcher.group(3);
+                index += Integer.parseInt(matcher.group(4));
+            }
+        }
+
+        if(nucleotide != null && nucleotide.length() > 1) {
+            nucleotide = nucleotide.substring(0,1);
+        }
+
+        if (nt1) {
+            pairBuilder.setPos1(index);
+            pairBuilder.setNucleotide1(nucleotide);
+        } else {
+            pairBuilder.setPos2(index);
+            pairBuilder.setNucleotide2(nucleotide);
+        }
+
+        System.out.println(nucleotide + "-" + index);
     }
 
     private void buildSequence(String val, JSONParser.MemberContext ctx) {

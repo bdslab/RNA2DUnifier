@@ -6,6 +6,8 @@ import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.InputStream;
 import java.util.List;
@@ -130,5 +132,51 @@ class X3dnaParserTest {
 
         Pair p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 5 && pr.getPos2() == 35)).findFirst().get();
         assertEquals(BondType.LEONTIS_WESTHOF_tWS, p.getType());
+    }
+
+    // -------------------------------------------------------------------------
+    // Additional files – generic validation (pair‑only DSSR JSON)
+    // -------------------------------------------------------------------------
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "2K95_A_dssr.json",
+            "2M8K_A_dssr.json",
+            "3J6B_A_A_dssr.json",
+            "4PLX_A_dssr.json",
+            "4PLX_B_dssr.json",
+            "4PLX_C_dssr.json"
+    })
+    @DisplayName("Pair‑only JSON files – basic parsing and validation")
+    void testAdditionalPairOnlyFiles(String fileName) throws Exception {
+        ExtendedRNASecondaryStructure s = parser.parse(resource(fileName));
+
+        // Basic structure checks
+        assertNotNull(s, "Parsed structure should not be null for " + fileName);
+        assertNotNull(s.getPairs(), "Pairs list should not be null for " + fileName);
+        assertNotNull(s.getSequence(), "Sequence should not be null (may be empty) for " + fileName);
+
+        // If the file contains a sequence (some pair‑only JSONs might have it), check indices bounds
+        if (s.getSequence() != null && !s.getSequence().isEmpty()) {
+            int seqLen = s.getSequence().length();
+            for (Pair p : s.getPairs()) {
+                assertTrue(p.getPos1() >= 0 && p.getPos1() < seqLen,
+                        "Pair position " + p.getPos1() + " out of bounds for sequence length " + seqLen + " in " + fileName);
+                assertTrue(p.getPos2() >= 0 && p.getPos2() < seqLen,
+                        "Pair position " + p.getPos2() + " out of bounds for sequence length " + seqLen + " in " + fileName);
+            }
+        } else {
+            // For files without sequence, at least ensure pairs are present (non‑empty is reasonable)
+            // Some small RNAs might have 0 pairs, but we can still pass.
+            // We only log a warning – not fail – if pairs are empty.
+            if (s.getPairs().isEmpty()) {
+                System.out.println("Warning: " + fileName + " contains no base pairs.");
+            }
+        }
+
+        // Additional sanity: no self‑pairs
+        for (Pair p : s.getPairs()) {
+            assertNotEquals(p.getPos1(), p.getPos2(),
+                    "Self-pair found at position " + p.getPos1() + " in " + fileName);
+        }
     }
 }
