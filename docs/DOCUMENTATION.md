@@ -488,8 +488,8 @@ U_5_0      A_25_0      SHc
 Each interaction line contains two residue identifiers (nucleotide + PDB number) and a Leontis–Westhof annotation in Barnaba's compact notation (e.g., `WCc` = Watson–Crick/cis).
 
 Example:
-- [1YMO_A.pdb.ANNOTATE.pairing.out](src/test/resources/rna-output/barnaba/1YMO_A.pdb.ANNOTATE.pairing.out)
-- [1YMO_A.pdb.ANNOTATE.stacking.out](src/test/resources/rna-output/barnaba/1YMO_A.pdb.ANNOTATE.stacking.out)
+- [1YMO_A.pdb.ANNOTATE.pairing.out](../src/test/resources/rna-output/barnaba/1YMO_A.pdb.ANNOTATE.pairing.out)
+- [1YMO_A.pdb.ANNOTATE.stacking.out](../src/test/resources/rna-output/barnaba/1YMO_A.pdb.ANNOTATE.stacking.out)
 
 ### 7.2 bpnet
 
@@ -502,7 +502,7 @@ bpnet produces a structured plain-text report. A data line looks like:
 The `W:WC` token encodes the bond type in BPFIND notation.
 
 Example:
-- [1YMO_A.1YMO_A.out](src/test/resources/rna-output/bpnet/1YMO_A.1YMO_A.out)
+- [1YMO_A.1YMO_A.out](../src/test/resources/rna-output/bpnet/1YMO_A.1YMO_A.out)
 
 ### 7.3 FR3D
 
@@ -530,7 +530,7 @@ FR3D outputs JSON. RNA2DUnifier looks for the key `"modified"` and `"annotations
 }
 ```
 Example: 
-- [1YMO_A_A_basepair.json](src/test/resources/rna-output/fr3d/1YMO_A_A_basepair.json)
+- [1YMO_A_A_basepair.json](../src/test/resources/rna-output/fr3d/1YMO_A_A_basepair.json)
 ### 7.4 mc-annotate
 
 mc-annotate produces a plain-text report with a `Residue conformations` section followed by stacking and pairing sections. A pairing line looks like:
@@ -539,7 +539,7 @@ mc-annotate produces a plain-text report with a `Residue conformations` section 
 A1-A29 : G-C Ww/Ww pairing antiparallel cis XIX
 ```
 Example:
-- [1YMO_A.txt](src/test/resources/rna-output/mc-annotate/txt/1YMO_A.txt)
+- [1YMO_A.txt](../src/test/resources/rna-output/mc-annotate/txt/1YMO_A.txt)
 ### 7.5 RNApolis
 
 RNApolis output begins with a FASTA-style sequence header (`>...`) and includes a tabular listing of pairs with the keyword `seq`. The parser reconstructs the sequence from the header.
@@ -552,7 +552,7 @@ cWW [[[[[[........((.((((((]]]]]]........)))))).)).
 ```
 
 Example: 
-- [1YMO_A.3db](src/test/resources/rna-output/rnapolis/1YMO_A.3db)
+- [1YMO_A.3db](../src/test/resources/rna-output/rnapolis/1YMO_A.3db)
 
 ### 7.6 RNAview
 
@@ -565,7 +565,7 @@ RNAview output contains a `BEGIN_base-pair` block. Interaction lines have the fo
 The last field is the Saenger Classification (e.g., `XIX` = cWW in Leontis Westhof notation).
 
 Example:
-- [1YMO_A.pdb.out](src/test/resources/rna-output/rnaview/1YMO_A.pdb.out)
+- [1YMO_A.pdb.out](../src/test/resources/rna-output/rnaview/1YMO_A.pdb.out)
 
 ### 7.7 x3dna-DSSR
 
@@ -588,7 +588,7 @@ x3dna-DSSR produces JSON. RNA2DUnifier identifies this format by the presence of
 }
 ```
 Example:
-- [1YMO_A.json](src/test/resources/rna-output/x3dna-dssr/1YMO_A.json)
+- [1YMO_A.json](../src/test/resources/rna-output/x3dna-dssr/1YMO_A.json)
 
 ---
 
