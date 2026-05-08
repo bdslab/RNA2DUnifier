@@ -5,12 +5,11 @@ import it.unicam.cs.bdslab.JSON.JSONParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Custom ANTLR listener for parsing x3dna JSON output files.
@@ -127,7 +126,6 @@ public class JSONX3dnaListener extends JSONBaseListener {
     public void enterMember(JSONParser.MemberContext ctx) {
         String val = ctx.STRING().getText().replaceAll("\"", "");
         buildPair(val, ctx);
-        // buildSequence(val, ctx);
         positionStack.push(val);
         if (positionStack.size() == 1) {
             switch (positionStack.peek()) {
@@ -200,11 +198,18 @@ public class JSONX3dnaListener extends JSONBaseListener {
         }
         String[] parts = fullIdentifier.split("\\.");
         if (parts.length < 2) {
-            logger.warn("Residue identifier '{}' does not contain a dot ('.') – assuming the whole string is the residue part.", fullIdentifier);
+            logger.warn(
+                "Residue identifier '{}' does not contain a dot ('.') – assuming the whole string is the residue part.",
+                fullIdentifier
+            );
             return fullIdentifier;
         }
         if (parts.length > 2) {
-            logger.warn("Residue identifier '{}' contains multiple dots – using part after first dot: '{}'", fullIdentifier, parts[1]);
+            logger.warn(
+                "Residue identifier '{}' contains multiple dots – using part after first dot: '{}'",
+                fullIdentifier,
+                parts[1]
+            );
         }
         return parts[1];
     }
@@ -239,21 +244,22 @@ public class JSONX3dnaListener extends JSONBaseListener {
                 index += Integer.parseInt(matcher.group(4));
             }
         } else {
-            logger.warn("Unrecognised residue format: '{}'. Expected patterns: 'LETTERS+DIGITS/DIGITS' or 'LETTERS+DIGITS'", val);
+            logger.warn(
+                "Unrecognised residue format: '{}'. Expected patterns: 'LETTERS+DIGITS/DIGITS' or 'LETTERS+DIGITS'",
+                val
+            );
         }
 
         if (nucleotide != null && nucleotide.length() > 1) {
-            logger.warn("Nucleotide string '{}' has length >1 – truncating to first character (uncommon residue) '{}'.", nucleotide, nucleotide.substring(0, 1));
+            logger.warn(
+                "Nucleotide string '{}' has length >1 – truncating to first character (uncommon residue) '{}'.",
+                nucleotide,
+                nucleotide.substring(0, 1)
+            );
             nucleotide = nucleotide.substring(0, 1);
         }
 
-        return new String[]{nucleotide, String.valueOf(index)};
-    }
-
-    private void buildSequence(String val, JSONParser.MemberContext ctx) {
-        if(inNts && val.equals("nt_name")) {
-            sequence.append(getItem(ctx));
-        }
+        return new String[] { nucleotide, String.valueOf(index) };
     }
 
     /**
@@ -289,21 +295,29 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
     private void buildPositionMap(JSONParser.MemberContext ctx) {
         Set<Integer> positions = new HashSet<>();
-        ctx.value().array().value().forEach(value ->
-            value.object().member().forEach(member -> {
-                String info = member.STRING().getText().replaceAll("\"", "");
-                if(Objects.equals(info, "nt1") || Objects.equals(info, "nt2")) {
-                    String val = getItem(member);
-                    String[] n = extractNucleotideValue(extractResidueIdentifier(val));
-                    positions.add(Integer.parseInt(n[1]));
-                }
-            })
-        );
+        ctx
+            .value()
+            .array()
+            .value()
+            .forEach(value ->
+                value
+                    .object()
+                    .member()
+                    .forEach(member -> {
+                        String info = member.STRING().getText().replaceAll("\"", "");
+                        if (Objects.equals(info, "nt1") || Objects.equals(info, "nt2")) {
+                            String val = getItem(member);
+                            String[] n = extractNucleotideValue(extractResidueIdentifier(val));
+                            positions.add(Integer.parseInt(n[1]));
+                        }
+                    })
+            );
 
         logger.warn("Normalizing residue positions");
 
-        positions.stream()
-                .sorted()
-                .forEach(position -> positionMap.put(position, positionMap.size()));
+        positions
+            .stream()
+            .sorted()
+            .forEach(position -> positionMap.put(position, positionMap.size()));
     }
 }
