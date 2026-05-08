@@ -487,53 +487,85 @@ U_5_0      A_25_0      SHc
 
 Each interaction line contains two residue identifiers (nucleotide + PDB number) and a Leontis–Westhof annotation in Barnaba's compact notation (e.g., `WCc` = Watson–Crick/cis).
 
-### 7.2 bpnet (BPFIND)
+Example:
+- [1YMO_A.pdb.ANNOTATE.pairing.out](..\src\test\resources\rna-output\barnaba\1YMO_A.pdb.ANNOTATE.pairing.out)
+- [1YMO_A.pdb.ANNOTATE.stacking.out](..\src\test\resources\rna-output\barnaba\1YMO_A.pdb.ANNOTATE.stacking.out)
+
+### 7.2 bpnet
 
 bpnet produces a structured plain-text report. A data line looks like:
 
 ```
-1   1   G   ?   29   29   C   ?   W:WC  A:M  syn:0  bh:0  gt:1  ngt:0  shear:...
+5       5   U ? A       25    25   A ? A    W:WC BP 0.24    35    35   A ? A    S:HC TP 1.59
 ```
 
 The `W:WC` token encodes the bond type in BPFIND notation.
 
+Example:
+- [1YMO_A.1YMO_A.out](..\src\test\resources\rna-output\bpnet\1YMO_A.1YMO_A.out)
+
 ### 7.3 FR3D
 
-FR3D outputs JSON. RNA2DUnifier looks for the key `"annotations"` at the top level.
+FR3D outputs JSON. RNA2DUnifier looks for the key `"modified"` and `"annotations"` at the top level.
 
 ```json
 {
+  "pdb_id": "1YMO_A",
+  "chain_id": "A",
+  "modified": [],
   "annotations": [
     {
-      "nt1": "1_G_1",
-      "nt2": "1_C_29",
-      "LW": "cWW"
+      "seq_id1": "19",
+      "3d_id1": "19",
+      "nt1": "A",
+      "unit1": "A",
+      "bp": "cWW",
+      "seq_id2": "42",
+      "nt2": "U",
+      "unit2": "U",
+      "3d_id2": "42",
+      "crossing": "0"
     }
   ]
 }
 ```
-
+Example: 
+- [1YMO_A_A_basepair.json](..\src\test\resources\rna-output\fr3d\1YMO_A_A_basepair.json)
 ### 7.4 mc-annotate
 
 mc-annotate produces a plain-text report with a `Residue conformations` section followed by stacking and pairing sections. A pairing line looks like:
 
 ```
-A.G1-A.C29 : W/W Antiparallel cis
+A1-A29 : G-C Ww/Ww pairing antiparallel cis XIX
 ```
-
+Example:
+- [1YMO_A.txt](..\src\test\resources\rna-output\mc-annotate\txt\1YMO_A.txt)
 ### 7.5 RNApolis
 
 RNApolis output begins with a FASTA-style sequence header (`>...`) and includes a tabular listing of pairs with the keyword `seq`. The parser reconstructs the sequence from the header.
+It has dot-bracket notation for base pairs.
+
+```
+>strand_A
+seq GGGCUGUUUUUCUCGCUGACUUUCAGCCCCAAACAAAAAAGUCAGCA
+cWW [[[[[[........((.((((((]]]]]]........)))))).)).
+```
+
+Example: 
+- [1YMO_A.3db](..\src\test\resources\rna-output\rnapolis\1YMO_A.3db)
 
 ### 7.6 RNAview
 
 RNAview output contains a `BEGIN_base-pair` block. Interaction lines have the form:
 
 ```
-   1 G     29 C     +/+ anti   XIX
+1_29, A:     1 G-C    29 A: +/+ cis         XIX
 ```
 
-The last field encodes the LW family (e.g., `XIX` = cWW in RNAview notation).
+The last field is the Saenger Classification (e.g., `XIX` = cWW in Leontis Westhof notation).
+
+Example:
+- [1YMO_A.pdb.out](..\src\test\resources\rna-output\rnaview\1YMO_A.pdb.out)
 
 ### 7.7 x3dna-DSSR
 
@@ -543,13 +575,20 @@ x3dna-DSSR produces JSON. RNA2DUnifier identifies this format by the presence of
 {
   "pairs": [
     {
+      "index": 1,
       "nt1": "A.G1",
       "nt2": "A.C29",
-      "LW": "cWW"
+      "bp": "G-C",
+      "name": "WC",
+      "Saenger": "19-XIX",
+      "LW": "cWW",
+      "DSSR": "cW-W"
     }
   ]
 }
 ```
+Example:
+- [1YMO_A.json](..\src\test\resources\rna-output\x3dna-dssr\1YMO_A.json)
 
 ---
 
@@ -563,7 +602,7 @@ The extended BPSEQ is a tab-separated file:
 Index	Nucleotide	cWW	tWW	cWH	tWH	cWS	tWS	cHH	tHH	cHS	tHS	cSS	tSS
 1	G	29	0	0	0	0	0	0	0	0	0	0	0
 2	G	28	0	0	0	0	0	0	0	0	0	0	0
-5	U	25	0	0	0	0	0	0	0	0	35	0	0
+5	U	25	0	0	0	0	0	0	0	0	35  0	0
 ...
 ```
 
