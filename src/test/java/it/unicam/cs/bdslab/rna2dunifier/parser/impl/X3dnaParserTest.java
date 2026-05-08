@@ -1,18 +1,16 @@
 package it.unicam.cs.bdslab.rna2dunifier.parser.impl;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import java.io.InputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.io.InputStream;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("X3dnaParser – DSSR JSON files")
 class X3dnaParserTest {
@@ -28,11 +26,6 @@ class X3dnaParserTest {
         InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/x3dna-dssr/" + resourceName);
         assertNotNull(is, "Resource not found: " + resourceName);
         return is;
-    }
-
-    private boolean containsPair(List<Pair> pairs, int pos1, int pos2) {
-        return pairs.stream().anyMatch(p -> (p.getPos1() == pos1 && p.getPos2() == pos2)
-                || (p.getPos1() == pos2 && p.getPos2() == pos1));
     }
 
     // -------------------------------------------------------------------------
@@ -59,7 +52,11 @@ class X3dnaParserTest {
     @DisplayName("Full JSON – canonical (cWW) count (15)")
     void testFullJson_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A.json"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(15, cww);
         assertEquals(cww, s.getCanonical().size());
     }
@@ -87,7 +84,11 @@ class X3dnaParserTest {
     @DisplayName("Pair‑only JSON – canonical count (15)")
     void testPairOnlyJson_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_dssr.json"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(15, cww);
     }
 
@@ -95,14 +96,16 @@ class X3dnaParserTest {
     // Additional files – generic validation (pair‑only DSSR JSON)
     // -------------------------------------------------------------------------
     @ParameterizedTest
-    @ValueSource(strings = {
+    @ValueSource(
+        strings = {
             "2K95_A_dssr.json",
             "2M8K_A_dssr.json",
             "3J6B_A_A_dssr.json",
             "4PLX_A_dssr.json",
             "4PLX_B_dssr.json",
-            "4PLX_C_dssr.json"
-    })
+            "4PLX_C_dssr.json",
+        }
+    )
     @DisplayName("Pair‑only JSON files – basic parsing and validation")
     void testAdditionalPairOnlyFiles(String fileName) throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource(fileName));
@@ -113,19 +116,24 @@ class X3dnaParserTest {
         assertNotNull(s.getSequence(), "Sequence should not be null (may be empty) for " + fileName);
 
         // Check that there is at least one pair involving the first nucleotide (index 0)
-        boolean hasPairWithFirstNucleotide = s.getPairs().stream()
-                .anyMatch(p -> p.getPos1() == 0 || p.getPos2() == 0);
-        assertTrue(hasPairWithFirstNucleotide,
-                "At least one pair should involve nucleotide index 0 in " + fileName);
+        boolean hasPairWithFirstNucleotide = s
+            .getPairs()
+            .stream()
+            .anyMatch(p -> p.getPos1() == 0 || p.getPos2() == 0);
+        assertTrue(hasPairWithFirstNucleotide, "At least one pair should involve nucleotide index 0 in " + fileName);
 
         // If the file contains a sequence (some pair‑only JSONs might have it), check indices bounds
         if (s.getSequence() != null && !s.getSequence().isEmpty()) {
             int seqLen = s.getSequence().length();
             for (Pair p : s.getPairs()) {
-                assertTrue(p.getPos1() >= 0 && p.getPos1() < seqLen,
-                        "Pair position " + p.getPos1() + " out of bounds for sequence length " + seqLen + " in " + fileName);
-                assertTrue(p.getPos2() >= 0 && p.getPos2() < seqLen,
-                        "Pair position " + p.getPos2() + " out of bounds for sequence length " + seqLen + " in " + fileName);
+                assertTrue(
+                    p.getPos1() >= 0 && p.getPos1() < seqLen,
+                    "Pair position " + p.getPos1() + " out of bounds for sequence length " + seqLen + " in " + fileName
+                );
+                assertTrue(
+                    p.getPos2() >= 0 && p.getPos2() < seqLen,
+                    "Pair position " + p.getPos2() + " out of bounds for sequence length " + seqLen + " in " + fileName
+                );
             }
         } else {
             // For files without sequence, at least ensure pairs are present (non‑empty is reasonable)
@@ -138,8 +146,7 @@ class X3dnaParserTest {
 
         // Additional sanity: no self‑pairs
         for (Pair p : s.getPairs()) {
-            assertNotEquals(p.getPos1(), p.getPos2(),
-                    "Self-pair found at position " + p.getPos1() + " in " + fileName);
+            assertNotEquals(p.getPos1(), p.getPos2(), "Self-pair found at position " + p.getPos1() + " in " + fileName);
         }
     }
 }

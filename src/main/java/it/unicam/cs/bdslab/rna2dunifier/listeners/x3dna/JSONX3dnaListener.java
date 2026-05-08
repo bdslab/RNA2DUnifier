@@ -51,9 +51,6 @@ public class JSONX3dnaListener extends JSONBaseListener {
     /** Flag indicating whether we are inside the "pairs" array. */
     private boolean inPairs = false;
 
-    /** Flag indicating whether we are inside the "nts" array */
-    private boolean inNts = false;
-
     /**
      * Returns the parsed RNA secondary structure.
      *
@@ -134,7 +131,6 @@ public class JSONX3dnaListener extends JSONBaseListener {
                     buildPositionMap(ctx);
                     break;
                 case "nts":
-                    inNts = true;
                     logger.warn("Sequence information ('nts' array) is present in JSON but ignored by this parser.");
                     break;
             }
@@ -289,7 +285,6 @@ public class JSONX3dnaListener extends JSONBaseListener {
         positionStack.pop();
         if (positionStack.isEmpty()) {
             inPairs = false;
-            inNts = false;
         }
     }
 
