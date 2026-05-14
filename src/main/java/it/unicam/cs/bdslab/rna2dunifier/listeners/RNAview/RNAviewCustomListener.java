@@ -114,10 +114,14 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
             logger.warn("Unexpected BASE_PAIR format: '{}' – expected two bases separated by '-'", basePair);
         }
 
-        this.pairBuilder.setNucleotide1(bases[0]);
-        this.pairBuilder.setNucleotide2(bases[1]);
+        this.pairBuilder.setNucleotide1(getResidue(bases[0]));
+        this.pairBuilder.setNucleotide2(getResidue(bases[1]));
         logger.debug("Base pair line: {}–{} ({}‑{})",
                 positionsString, basePair, bases[0], bases[1]);
+    }
+
+    private String getResidue(String residue) {
+        return Character.isLowerCase(residue.charAt(0)) ? "N" : residue;
     }
 
     /**

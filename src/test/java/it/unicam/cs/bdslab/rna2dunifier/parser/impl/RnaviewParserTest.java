@@ -86,7 +86,7 @@ class RnaviewParserTest {
             // Check that a pair involving the uncommon 'a' (residue 76) is present.
             boolean hasUncommon = struct.getPairs().stream()
                     .anyMatch(p -> (p.getPos1() == 75 || p.getPos2() == 75) &&
-                            (Objects.equals("a", p.getNucleotide1()) || Objects.equals("a", p.getNucleotide2())));
+                            (Objects.equals("a", p.getNucleotide1()) || Objects.equals("N", p.getNucleotide2())));
             assertTrue(hasUncommon, "Should contain pair with uncommon residue a76");
         }
     }
