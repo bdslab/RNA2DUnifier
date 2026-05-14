@@ -152,8 +152,8 @@ class BpnetParserTest {
     void test4PLX_A_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.4PLX_A.out"));
         assertEquals(76, s.getSequence().length());
-        assertEquals('G', s.getSequence().charAt(0));   // GTP -> G
-        assertEquals('A', s.getSequence().charAt(75)); // A23 -> A
+        assertEquals('N', s.getSequence().charAt(0));   // GTP -> N
+        assertEquals('N', s.getSequence().charAt(75)); // A23 -> N
     }
 
     @Test
@@ -179,8 +179,8 @@ class BpnetParserTest {
     void test4PLX_B_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_B.4PLX_B.out"));
         assertEquals(73, s.getSequence().length());
-        assertEquals('G', s.getSequence().charAt(0));
-        assertEquals('A', s.getSequence().charAt(72));
+        assertEquals('N', s.getSequence().charAt(0));
+        assertEquals('N', s.getSequence().charAt(72));
     }
 
     @Test
@@ -206,8 +206,8 @@ class BpnetParserTest {
     void test4PLX_C_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_C.4PLX_C.out"));
         assertEquals(71, s.getSequence().length());
-        assertEquals('G', s.getSequence().charAt(0));
-        assertEquals('A', s.getSequence().charAt(70));
+        assertEquals('N', s.getSequence().charAt(0));
+        assertEquals('N', s.getSequence().charAt(70));
     }
 
     @Test
