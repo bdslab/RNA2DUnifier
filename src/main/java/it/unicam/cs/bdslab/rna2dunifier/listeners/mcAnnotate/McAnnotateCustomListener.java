@@ -5,12 +5,11 @@ import it.unicam.cs.bdslab.mcannotate.McAnnotateGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import java.util.HashMap;
+import java.util.Map;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Custom ANTLR listener for parsing mc‑annotate output files.
@@ -81,9 +80,11 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     @Override
     public void exitMcAnnotateFile(McAnnotateGrammarParser.McAnnotateFileContext ctx) {
         this.structure = structureBuilder.build();
-        logger.info("Finished parsing mc‑annotate file: sequence length={}, pairs={}",
-                sequence != null ? sequence.length() : 0,
-                structure.getPairs().size());
+        logger.info(
+            "Finished parsing mc‑annotate file: sequence length={}, pairs={}",
+            sequence != null ? sequence.length() : 0,
+            structure.getPairs().size()
+        );
     }
 
     /**
@@ -130,8 +131,12 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
         String nucleotide;
 
         if (nucleotideToken.length() > 1) {
-            nucleotide = nucleotideToken.substring(0, 1);
-            logger.warn("Nucleotide token '{}' has length >1 – truncating to (Uncommon residue) '{}'", nucleotideToken, nucleotide);
+            nucleotide = "N";
+            logger.warn(
+                "Nucleotide token '{}' has length >1 – truncating to (Uncommon residue) '{}'",
+                nucleotideToken,
+                nucleotide
+            );
         } else {
             nucleotide = nucleotideToken;
         }
@@ -150,8 +155,11 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
         if (originalNumber > 0) {
             // Detect jumps in residue numbers
             if (lastResidueNumber != -1 && originalNumber != lastResidueNumber + 1) {
-                logger.warn("Residue number jump: previous {} → current {} (possible missing residues)",
-                        lastResidueNumber, originalNumber);
+                logger.warn(
+                    "Residue number jump: previous {} → current {} (possible missing residues)",
+                    lastResidueNumber,
+                    originalNumber
+                );
             }
             lastResidueNumber = originalNumber;
         }

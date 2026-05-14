@@ -157,8 +157,8 @@ class McAnnotateParserTest {
     void test4PLX_A_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.txt"));
         assertEquals(76, s.getSequence().length());
-        assertEquals('G', s.getSequence().charAt(0));   // GTP → G
-        assertEquals('A', s.getSequence().charAt(75)); // A23 → A
+        assertEquals('N', s.getSequence().charAt(0));   // GTP → N
+        assertEquals('N', s.getSequence().charAt(75)); // A23 → N
     }
 
     @Test
