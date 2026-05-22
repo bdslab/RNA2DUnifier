@@ -148,18 +148,17 @@ public final class Pair {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Pair)) return false;
         Pair pair = (Pair) o;
-
-        // Bond type must be equal
-        if (type != pair.type) return false;
 
         // Positions must match as an unordered pair
         boolean positionsMatch = (pos1 == pair.pos1 && pos2 == pair.pos2) || (pos1 == pair.pos2 && pos2 == pair.pos1);
 
         // Nucleotides must match as an unordered pair, handling nulls
         return (
-            positionsMatch && nucleotidesEqualUnordered(nucleotide1, nucleotide2, pair.nucleotide1, pair.nucleotide2)
+            positionsMatch &&
+            type == pair.type &&
+            nucleotidesEqualUnordered(nucleotide1, nucleotide2, pair.nucleotide1, pair.nucleotide2)
         );
     }
 
