@@ -15,13 +15,13 @@ import java.util.Objects;
  * @author Federico di Petta, Francesco Palozzi
  * @see BondType
  */
-public class Pair {
+public final class Pair {
 
     private final int pos1;
     private final int pos2;
     private final BondType type;
-    private String nucleotide1;
-    private String nucleotide2;
+    private final String nucleotide1;
+    private final String nucleotide2;
 
     /**
      * Constructs a Pair with the specified positions and bond type.
@@ -34,6 +34,8 @@ public class Pair {
         this.pos1 = pos1;
         this.pos2 = pos2;
         this.type = type;
+        this.nucleotide1 = null;
+        this.nucleotide2 = null;
     }
 
     /**
@@ -55,7 +57,9 @@ public class Pair {
      * @param nucleotide2 The nucleotide at the second position (e.g., "A", "U", "C", "G").
      */
     public Pair(int pos1, int pos2, String nucleotide1, String nucleotide2) {
-        this(pos1, pos2);
+        this.pos1 = pos1;
+        this.pos2 = pos2;
+        this.type = BondType.UNKNOWN;
         this.nucleotide1 = nucleotide1;
         this.nucleotide2 = nucleotide2;
     }
@@ -70,7 +74,9 @@ public class Pair {
      * @param type        The type of bond between the nucleotides, as defined in the BondType enum.
      */
     public Pair(int pos1, int pos2, String nucleotide1, String nucleotide2, BondType type) {
-        this(pos1, pos2, type);
+        this.pos1 = pos1;
+        this.pos2 = pos2;
+        this.type = type;
         this.nucleotide1 = nucleotide1;
         this.nucleotide2 = nucleotide2;
     }
@@ -149,12 +155,12 @@ public class Pair {
         if (type != pair.type) return false;
 
         // Positions must match as an unordered pair
-        boolean positionsMatch = (pos1 == pair.pos1 && pos2 == pair.pos2) ||
-                (pos1 == pair.pos2 && pos2 == pair.pos1);
+        boolean positionsMatch = (pos1 == pair.pos1 && pos2 == pair.pos2) || (pos1 == pair.pos2 && pos2 == pair.pos1);
 
         // Nucleotides must match as an unordered pair, handling nulls
-        return positionsMatch && nucleotidesEqualUnordered(nucleotide1, nucleotide2,
-                pair.nucleotide1, pair.nucleotide2);
+        return (
+            positionsMatch && nucleotidesEqualUnordered(nucleotide1, nucleotide2, pair.nucleotide1, pair.nucleotide2)
+        );
     }
 
     private boolean nucleotidesEqualUnordered(String a1, String a2, String b1, String b2) {
@@ -165,8 +171,7 @@ public class Pair {
         if (b1 == null && b2 == null) return false;
 
         // Compare unordered
-        return (Objects.equals(a1, b1) && Objects.equals(a2, b2)) ||
-                (Objects.equals(a1, b2) && Objects.equals(a2, b1));
+        return (Objects.equals(a1, b1) && Objects.equals(a2, b2)) || (Objects.equals(a1, b2) && Objects.equals(a2, b1));
     }
 
     /**
@@ -181,7 +186,7 @@ public class Pair {
         int p1 = Math.min(pos1, pos2);
         int p2 = Math.max(pos1, pos2);
 
-        String[] nucs = {nucleotide1, nucleotide2};
+        String[] nucs = { nucleotide1, nucleotide2 };
         Arrays.sort(nucs, Comparator.nullsFirst(Comparator.naturalOrder()));
         // nucs[0] is the smaller (null if any null), nucs[1] the larger
 
@@ -193,6 +198,7 @@ public class Pair {
      * Provides a fluent interface to create {@code Pair} instances incrementally.
      */
     public static class Builder {
+
         private int pos1;
         private int pos2;
         private BondType type;
