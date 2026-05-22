@@ -21,7 +21,6 @@ import java.util.List;
  * The prefix 'c' indicates cis orientation, 't' indicates trans.
  */
 public enum BondType {
-
     /** Unknown or unclassified bond type. */
     UNKNOWN("unknown"),
 
@@ -87,20 +86,14 @@ public enum BondType {
      * @return the corresponding BondType, or {@link #UNKNOWN} if not found or if text is null
      */
     public static BondType fromString(String text) {
-        if (text == null) {
-            return UNKNOWN;
-        }
+        if (text == null) return UNKNOWN;
 
-        String normalized = text.toUpperCase();
-        normalized = normalized.replace("SH", "HS");
-        normalized = normalized.replace("SW", "WS");
-        normalized = normalized.replace("HW", "WH");
+        String normalized = text.toUpperCase().replace("SH", "HS").replace("SW", "WS").replace("HW", "WH");
 
         for (BondType b : BondType.values()) {
-            if (b.info.equalsIgnoreCase(normalized)) {
-                return b;
-            }
+            if (b.info.equalsIgnoreCase(normalized)) return b;
         }
+
         return UNKNOWN;
     }
 
@@ -113,8 +106,14 @@ public enum BondType {
      *         {@code false} otherwise (including UNKNOWN and STACKING)
      */
     public boolean isCis() {
-        return this == LEONTIS_WESTHOF_cWW || this == LEONTIS_WESTHOF_cWH || this == LEONTIS_WESTHOF_cWS ||
-               this == LEONTIS_WESTHOF_cHH || this == LEONTIS_WESTHOF_cHS || this == LEONTIS_WESTHOF_cSS;
+        return (
+            this == LEONTIS_WESTHOF_cWW ||
+            this == LEONTIS_WESTHOF_cWH ||
+            this == LEONTIS_WESTHOF_cWS ||
+            this == LEONTIS_WESTHOF_cHH ||
+            this == LEONTIS_WESTHOF_cHS ||
+            this == LEONTIS_WESTHOF_cSS
+        );
     }
 
     /**
@@ -126,8 +125,14 @@ public enum BondType {
      *         {@code false} otherwise (including UNKNOWN and STACKING)
      */
     public boolean isTrans() {
-        return this == LEONTIS_WESTHOF_tWW || this == LEONTIS_WESTHOF_tWH || this == LEONTIS_WESTHOF_tWS ||
-               this == LEONTIS_WESTHOF_tHH || this == LEONTIS_WESTHOF_tHS || this == LEONTIS_WESTHOF_tSS;
+        return (
+            this == LEONTIS_WESTHOF_tWW ||
+            this == LEONTIS_WESTHOF_tWH ||
+            this == LEONTIS_WESTHOF_tWS ||
+            this == LEONTIS_WESTHOF_tHH ||
+            this == LEONTIS_WESTHOF_tHS ||
+            this == LEONTIS_WESTHOF_tSS
+        );
     }
 
     /**
@@ -145,10 +150,8 @@ public enum BondType {
      */
     public static List<BondType> getLeontisWesthofFamily() {
         return Arrays.stream(values())
-                .filter(bt -> bt != BondType.UNKNOWN
-                        && bt != BondType.STACKING
-                )
-                .sorted(Comparator.comparingInt(Enum::ordinal))
-                .toList();
+            .filter(bt -> bt != BondType.UNKNOWN && bt != BondType.STACKING)
+            .sorted(Comparator.comparingInt(Enum::ordinal))
+            .toList();
     }
 }
