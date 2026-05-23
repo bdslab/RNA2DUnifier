@@ -5,7 +5,9 @@ import it.unicam.cs.bdslab.bpnet.BpnetGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,22 @@ import org.slf4j.LoggerFactory;
 public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
 
     private static final Logger logger = LoggerFactory.getLogger(BpnetParserCustomListener.class);
+
+    private static final Map<Character, Character> EDGE_MAP = new HashMap<>();
+
+    static {
+        // Direct mapping case‑insensitive for W, H, S
+        EDGE_MAP.put('W', 'W');
+        EDGE_MAP.put('w', 'W');
+        EDGE_MAP.put('H', 'H');
+        EDGE_MAP.put('h', 'H');
+        EDGE_MAP.put('S', 'S');
+        EDGE_MAP.put('s', 'S');
+        // Special cases
+        EDGE_MAP.put('+', 'W');
+        EDGE_MAP.put('z', 'S');
+        EDGE_MAP.put('g', 'H');
+    }
 
     /** Builder for the final RNA secondary structure. */
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
@@ -138,9 +156,14 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
      * @return the corresponding {@code BondType}
      */
     private BondType getType(String bond) {
-        String edge1 = convertEdge(bond.substring(0, 1));
-        String edge2 = convertEdge(bond.substring(2, 3));
-        String orientation = bond.substring(3).toLowerCase();
+        // bond should have at least 4 characters: e.g. "W:WC"
+        char edge1Char = bond.charAt(0);
+        char edge2Char = bond.charAt(2);
+        char orientChar = bond.charAt(3);
+
+        String edge1 = convertEdge(edge1Char);
+        String edge2 = convertEdge(edge2Char);
+        String orientation = String.valueOf(orientChar).toLowerCase();
 
         BondType result = BondType.fromString(orientation + edge1 + edge2);
         if (result == null) {
@@ -158,35 +181,16 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
     /**
      * Converts a single‑character edge code from bpnet format to internal format.
      * <p>
-     * Mapping rules:
-     * <ul>
-     *   <li>{@code W}, {@code H}, {@code S} (case‑insensitive) → uppercase same letter</li>
-     *   <li>{@code +} → {@code W}</li>
-     *   <li>{@code z} → {@code S}</li>
-     *   <li>{@code g} → {@code H}</li>
-     *   <li>any other → {@code ?}</li>
-     * </ul>
+     * Ottimizzazione punto 7: uso di mappa statica precalcolata.
      *
-     * @param edge a single character edge code (e.g., "W", "z", "+")
-     * @return the converted edge letter for internal bond representation
+     * @param edge a single character edge code (e.g., 'W', 'z', '+')
+     * @return the converted edge letter for internal bond representation, or "?" if unknown
      */
-    private String convertEdge(String edge) {
-        if (edge.toLowerCase().matches("[whs]")) return edge.toUpperCase();
-        String result;
-        switch (edge) {
-            case "+":
-                result = "W";
-                break;
-            case "z":
-                result = "S";
-                break;
-            case "g":
-                result = "H";
-                break;
-            default:
-                result = "?";
-                logger.warn("Unrecognised edge code '{}' – using '?'", edge);
-        }
-        return result;
+    private static String convertEdge(char edge) {
+        Character mapped = EDGE_MAP.get(edge);
+        if (mapped != null) return String.valueOf(mapped);
+
+        logger.warn("Unrecognised edge code '{}' – using '?'", edge);
+        return "?";
     }
 }
