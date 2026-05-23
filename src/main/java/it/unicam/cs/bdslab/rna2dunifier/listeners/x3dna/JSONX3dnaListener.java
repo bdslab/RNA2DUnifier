@@ -33,23 +33,22 @@ public class JSONX3dnaListener extends JSONBaseListener {
     /** Builder for the final RNA secondary structure. */
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
 
-    /** Builder for the current base pair being processed. */
-    private Pair.Builder pairBuilder;
-
     /** The final built structure. */
     private ExtendedRNASecondaryStructure structure;
 
-    /** The sequence string builder */
-    private final StringBuilder sequence = new StringBuilder();
-
-    /** Stack tracking JSON object member names (keys) to maintain context. */
-    private final Stack<String> positionStack = new Stack<>();
+    /** Builder for the current base pair being processed. */
+    private Pair.Builder currentPairBuilder;
 
     /** position map to normalize nucleotide positions */
     private final Map<Integer, Integer> positionMap = new HashMap<>();
 
     /** Flag indicating whether we are inside the "pairs" array. */
     private boolean inPairs = false;
+
+    /** Helper class for parsing residue identifiers. */
+    private ResidueParser residueParser;
+
+    private int depth = 0;
 
     /**
      * Returns the parsed RNA secondary structure.
@@ -68,7 +67,9 @@ public class JSONX3dnaListener extends JSONBaseListener {
      */
     @Override
     public void enterJson(JSONParser.JsonContext ctx) {
-        this.structureBuilder = new ExtendedRNASecondaryStructure.Builder();
+        structureBuilder = new ExtendedRNASecondaryStructure.Builder();
+        residueParser = new ResidueParser(positionMap);
+        logger.debug("Started parsing x3dna JSON file");
     }
 
     /**
@@ -79,8 +80,8 @@ public class JSONX3dnaListener extends JSONBaseListener {
      */
     @Override
     public void exitJson(JSONParser.JsonContext ctx) {
-        structureBuilder.setSequence(sequence.toString());
-        this.structure = structureBuilder.build();
+        structure = structureBuilder.build();
+        logger.info("Finished x3dna parsing: pairs={}", structure.getPairs().size());
     }
 
     /**
@@ -92,7 +93,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
     @Override
     public void enterObject(JSONParser.ObjectContext ctx) {
         if (inPairs) {
-            pairBuilder = new Pair.Builder();
+            currentPairBuilder = new Pair.Builder();
         }
     }
 
@@ -104,9 +105,15 @@ public class JSONX3dnaListener extends JSONBaseListener {
      */
     @Override
     public void exitObject(JSONParser.ObjectContext ctx) {
-        if (inPairs) {
-            structureBuilder.addPair(pairBuilder.build());
+        if (inPairs && currentPairBuilder != null) {
+            Pair p = currentPairBuilder.build();
+            if (p.getPos1() >= 0 && p.getPos2() >= 0) {
+                structureBuilder.addPair(p);
+            } else {
+                logger.warn("Skipping invalid pair: ({},{})", p.getPos1(), p.getPos2());
+            }
         }
+        currentPairBuilder = null;
     }
 
     /**
@@ -121,155 +128,27 @@ public class JSONX3dnaListener extends JSONBaseListener {
      */
     @Override
     public void enterMember(JSONParser.MemberContext ctx) {
-        String val = ctx.STRING().getText().replaceAll("\"", "");
-        buildPair(val, ctx);
-        positionStack.push(val);
-        if (positionStack.size() == 1) {
-            switch (positionStack.peek()) {
-                case "pairs":
-                    inPairs = true;
-                    buildPositionMap(ctx);
-                    break;
-                case "nts":
-                    logger.warn("Sequence information ('nts' array) is present in JSON but ignored by this parser.");
-                    break;
-            }
-        }
-    }
+        String key = stripQuotes(ctx.STRING().getText());
+        depth++;
 
-    /**
-     * Builds the current {@link Pair} by setting fields based on the member name.
-     * Called only when {@code inPairs} is true.
-     * <p>
-     * Recognised member names:
-     * <ul>
-     *   <li>"nt1" – sets first residue: extracts position and nucleotide from string like "A1"</li>
-     *   <li>"nt2" – sets second residue: extracts position and nucleotide from string like "C23"</li>
-     *   <li>"LW" – sets the bond type (e.g., "cWW", "tSH")</li>
-     * </ul>
-     * The format for nt1/nt2 values is a single nucleotide letter followed by the position number
-     * (e.g., "A1", "G42").
-     *
-     * @param val the member name (key)
-     * @param ctx the member context containing the value
-     */
-    private void buildPair(String val, JSONParser.MemberContext ctx) {
-        if (inPairs) {
-            String item;
-            switch (val) {
+        if (depth == 1 && key.equals("pairs")) {
+            inPairs = true;
+            buildPositionMap(ctx);
+        } else if (inPairs && currentPairBuilder != null) {
+            String val = getStringValue(ctx.value());
+            if (val == null) return;
+
+            switch (key) {
                 case "nt1":
-                    item = getItem(ctx);
-                    String residue1 = extractResidueIdentifier(item);
-                    if (residue1 != null) {
-                        buildPair(residue1, true);
-                    }
+                    residueParser.setResidue(currentPairBuilder, val, true);
                     break;
                 case "nt2":
-                    item = getItem(ctx);
-                    String residue2 = extractResidueIdentifier(item);
-                    if (residue2 != null) {
-                        buildPair(residue2, false);
-                    }
+                    residueParser.setResidue(currentPairBuilder, val, false);
                     break;
                 case "LW":
-                    item = getItem(ctx);
-                    pairBuilder.setType(BondType.fromString(item));
+                    currentPairBuilder.setType(BondType.fromString(val));
                     break;
             }
-        }
-    }
-
-    /**
-     * Extracts the residue identifier part from a full identifier like "A.A1".
-     * Expected format: chain.residue (e.g., "A.A1").
-     * If a dot is present, returns the part after the dot.
-     *
-     * @param fullIdentifier the raw string from the JSON
-     * @return the residue identifier (e.g., "A1") or {@code null} if format is invalid
-     */
-    private String extractResidueIdentifier(String fullIdentifier) {
-        if (fullIdentifier == null || fullIdentifier.isEmpty()) {
-            logger.warn("Empty or null residue identifier encountered.");
-            return null;
-        }
-        String[] parts = fullIdentifier.split("\\.");
-        if (parts.length < 2) {
-            logger.warn(
-                "Residue identifier '{}' does not contain a dot ('.') – assuming the whole string is the residue part.",
-                fullIdentifier
-            );
-            return fullIdentifier;
-        }
-        if (parts.length > 2) {
-            logger.warn(
-                "Residue identifier '{}' contains multiple dots – using part after first dot: '{}'",
-                fullIdentifier,
-                parts[1]
-            );
-        }
-        return parts[1];
-    }
-
-    private void buildPair(String val, boolean nt1) {
-        String[] n = extractNucleotideValue(val);
-
-        if (nt1) {
-            pairBuilder.setPos1(positionMap.get(Integer.parseInt(n[1])));
-            pairBuilder.setNucleotide1(n[0]);
-        } else {
-            pairBuilder.setPos2(positionMap.get(Integer.parseInt(n[1])));
-            pairBuilder.setNucleotide2(n[0]);
-        }
-    }
-
-    private String[] extractNucleotideValue(String val) {
-        String regex = "^(?:([A-Z]+[0-9]+)/([0-9]+)|([A-Z]+)([0-9]+))$";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(val);
-
-        String nucleotide = null;
-        int index = -1;
-        if (matcher.matches()) {
-            if (matcher.group(1) != null) {
-                // Slash case
-                nucleotide = matcher.group(1);
-                index += Integer.parseInt(matcher.group(2));
-            } else {
-                // No-slash case
-                nucleotide = matcher.group(3);
-                index += Integer.parseInt(matcher.group(4));
-            }
-        } else {
-            logger.warn(
-                "Unrecognised residue format: '{}'. Expected patterns: 'LETTERS+DIGITS/DIGITS' or 'LETTERS+DIGITS'",
-                val
-            );
-        }
-
-        if (nucleotide != null && nucleotide.length() > 1) {
-            logger.warn(
-                "Nucleotide string '{}' has length >1 – truncating to first character (uncommon residue) '{}'.",
-                nucleotide,
-                nucleotide.substring(0, 1)
-            );
-            nucleotide = nucleotide.substring(0, 1);
-        }
-
-        return new String[] { nucleotide, String.valueOf(index) };
-    }
-
-    /**
-     * Extracts the string value from a member context (removing surrounding quotes).
-     *
-     * @param ctx the member context
-     * @return the unquoted string value, or an empty string if the value is not a STRING
-     */
-    private String getItem(JSONParser.MemberContext ctx) {
-        if (ctx.value().STRING() != null) {
-            return ctx.value().STRING().getText().replaceAll("\"", "");
-        } else {
-            logger.warn("Expected STRING value but found different type – returning empty string.");
-            return "";
         }
     }
 
@@ -282,37 +161,193 @@ public class JSONX3dnaListener extends JSONBaseListener {
      */
     @Override
     public void exitMember(JSONParser.MemberContext ctx) {
-        positionStack.pop();
-        if (positionStack.isEmpty()) {
+        depth--;
+        String key = stripQuotes(ctx.STRING().getText());
+        logger.debug("Uscita pairs");
+        if (key.equals("pairs")) {
             inPairs = false;
         }
     }
 
     private void buildPositionMap(JSONParser.MemberContext ctx) {
         Set<Integer> positions = new HashSet<>();
-        ctx
-            .value()
-            .array()
-            .value()
-            .forEach(value ->
-                value
-                    .object()
-                    .member()
-                    .forEach(member -> {
-                        String info = member.STRING().getText().replaceAll("\"", "");
-                        if (Objects.equals(info, "nt1") || Objects.equals(info, "nt2")) {
-                            String val = getItem(member);
-                            String[] n = extractNucleotideValue(extractResidueIdentifier(val));
-                            positions.add(Integer.parseInt(n[1]));
-                        }
-                    })
-            );
+        JSONParser.ArrayContext array = ctx.value().array();
+        if (array == null) return;
 
-        logger.warn("Normalizing residue positions");
+        for (JSONParser.ValueContext val : array.value()) {
+            JSONParser.ObjectContext obj = val.object();
+            if (obj == null) continue;
+            for (JSONParser.MemberContext member : obj.member()) {
+                String key = stripQuotes(member.STRING().getText());
+                if (key.equals("nt1") || key.equals("nt2")) {
+                    String full = getStringValue(member.value());
+                    if (full != null) {
+                        Integer pos = residueParser.extractPosition(full);
+                        if (pos != null) positions.add(pos);
+                    }
+                }
+            }
+        }
 
-        positions
-            .stream()
-            .sorted()
-            .forEach(position -> positionMap.put(position, positionMap.size()));
+        List<Integer> sorted = new ArrayList<>(positions);
+        Collections.sort(sorted);
+        positionMap.clear();
+        for (int i = 0; i < sorted.size(); i++) {
+            positionMap.put(sorted.get(i), i);
+        }
+        logger.debug("Position map built with {} entries", positionMap.size());
+    }
+
+    // ----------------------------------------------------------------------
+    // Utility methods
+    // ----------------------------------------------------------------------
+
+    private static String stripQuotes(String s) {
+        return s.replaceAll("^\"|\"$", "");
+    }
+
+    private String getStringValue(JSONParser.ValueContext valueCtx) {
+        if (valueCtx.STRING() != null) {
+            return stripQuotes(valueCtx.STRING().getText());
+        }
+        if (valueCtx.NUMBER() != null) {
+            return valueCtx.NUMBER().getText();
+        }
+        return null;
+    }
+
+    // ----------------------------------------------------------------------
+    // Helper class for residue parsing
+    // ----------------------------------------------------------------------
+
+    /**
+     * Helper class for parsing x3dna residue identifiers.
+     * Handles formats: "G2", "GTP1", "A23/76"
+     */
+    private static final class ResidueParser {
+
+        private static final Pattern BASE_PATTERN = Pattern.compile("^([A-Z]+)");
+        private static final Pattern POSITION_PATTERN = Pattern.compile("^[A-Z]+([0-9]+)");
+
+        private final Map<Integer, Integer> positionMap;
+
+        ResidueParser(Map<Integer, Integer> positionMap) {
+            this.positionMap = positionMap;
+        }
+
+        /**
+         * Extracts and sets residue information (position and nucleotide) into a Pair.Builder.
+         *
+         * @param builder the Pair.Builder to update
+         * @param fullIdentifier the full string (e.g., "A.G2")
+         * @param isFirst true for nt1, false for nt2
+         */
+        void setResidue(Pair.Builder builder, String fullIdentifier, boolean isFirst) {
+            String residuePart = extractIdentifier(fullIdentifier);
+            if (residuePart == null) return;
+
+            String[] parsed = parse(residuePart);
+            if (parsed == null) return;
+
+            String base = parsed[0];
+            int pdbPos;
+            try {
+                pdbPos = Integer.parseInt(parsed[1]);
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid position in '{}'", residuePart);
+                return;
+            }
+
+            Integer idx = positionMap.get(pdbPos);
+            if (idx == null) {
+                logger.warn("Position {} not in map", pdbPos);
+                return;
+            }
+
+            if (isFirst) {
+                builder.setPos1(idx).setNucleotide1(base);
+            } else {
+                builder.setPos2(idx).setNucleotide2(base);
+            }
+        }
+
+        /**
+         * Extracts just the position number from a full identifier.
+         *
+         * @param fullIdentifier the full string (e.g., "A.G2")
+         * @return the original PDB position, or null if extraction fails
+         */
+        Integer extractPosition(String fullIdentifier) {
+            String residuePart = extractIdentifier(fullIdentifier);
+            if (residuePart == null) return null;
+            String[] parsed = parse(residuePart);
+            if (parsed == null) return null;
+            try {
+                return Integer.parseInt(parsed[1]);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+
+        /**
+         * Extracts the residue part (after the dot) from a full identifier.
+         */
+        private String extractIdentifier(String full) {
+            if (full == null || full.isEmpty()) return null;
+            String[] parts = full.split("\\.");
+            if (parts.length < 2) {
+                logger.warn("No dot in '{}', using as is (may cause issues)", full);
+                return full;
+            }
+            // In case of multiple dots, take everything after the first dot
+            // (e.g., "A.B.C2" -> "B.C2" – not expected in x3dna, but safe)
+            return full.substring(full.indexOf('.') + 1);
+        }
+
+        /**
+         * Parses a residue string into [base, position].
+         * Handles: "G2", "GTP1", "A23/76"
+         */
+        private String[] parse(String residue) {
+            String basePart;
+            String posStr;
+
+            String[] slashParts = residue.split("/");
+            if (slashParts.length == 2) {
+                basePart = slashParts[0];
+                posStr = slashParts[1];
+            } else {
+                basePart = residue;
+                posStr = null;
+            }
+
+            // Extract the base: first character of the alphabetic prefix
+            Matcher baseMatcher = BASE_PATTERN.matcher(basePart);
+            if (!baseMatcher.find()) {
+                logger.warn("No alphabetic base found in '{}'", basePart);
+                return null;
+            }
+            String rawBase = baseMatcher.group(1);
+            String base;
+            if (rawBase.length() == 1) {
+                base = rawBase;
+            } else {
+                // Non‑standard residue: log warning and normalise to 'N'
+                logger.warn("Uncommon residue '{}' (original part '{}') – normalising to 'N'", rawBase, basePart);
+                base = "N";
+            }
+
+            // Extract position
+            if (posStr == null) {
+                Matcher posMatcher = POSITION_PATTERN.matcher(basePart);
+                if (!posMatcher.find()) {
+                    logger.warn("No position number found in '{}'", basePart);
+                    return null;
+                }
+                posStr = posMatcher.group(1);
+            }
+
+            return new String[] { base, posStr };
+        }
     }
 }
