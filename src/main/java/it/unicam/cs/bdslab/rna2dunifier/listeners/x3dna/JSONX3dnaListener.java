@@ -17,9 +17,12 @@ import org.slf4j.LoggerFactory;
  * <p>This listener processes JSON grammar parse events (from x3dna output)
  * to build an {@link ExtendedRNASecondaryStructure} object. It handles:
  * <ul>
- *   <li>Extracting base‑pair information from the "pairs" array</li>
- *   <li>Parsing nucleotide identifiers (e.g., "A1" → nucleotide 'A', position 1)</li>
- *   <li>Converting x3dna bond type annotations (e.g., "cWW", "tSH") into internal {@link BondType}</li>
+ *   <li>Extracting base‑pair information only from the top‑level {@code "pairs"} array,
+ *       ignoring nested arrays with the same name (e.g., inside {@code "helices"} or {@code "stems"}).</li>
+ *   <li>Parsing nucleotide identifiers in formats like {@code "A.G2"}, {@code "A.GTP1"}, or {@code "A.A23/76"}
+ *       into a nucleotide letter (or {@code "N"} for non‑standard residues) and a PDB position number.</li>
+ *   <li>Converting x3dna bond type annotations (e.g., {@code "cWW"}, {@code "tSH"}) into internal {@link BondType}.</li>
+ *   <li>Building a zero‑based position map from the PDB numbers to ensure consistent indexing.</li>
  * </ul>
  *
  * @author Francesco Palozzi
@@ -39,15 +42,16 @@ public class JSONX3dnaListener extends JSONBaseListener {
     /** Builder for the current base pair being processed. */
     private Pair.Builder currentPairBuilder;
 
-    /** position map to normalize nucleotide positions */
+    /** Maps original PDB residue numbers to zero‑based indices. */
     private final Map<Integer, Integer> positionMap = new HashMap<>();
 
-    /** Flag indicating whether we are inside the "pairs" array. */
+    /** Flag indicating whether we are inside the top‑level {@code "pairs"} array. */
     private boolean inPairs = false;
 
-    /** Helper class for parsing residue identifiers. */
+    /** Helper for parsing residue identifiers. */
     private ResidueParser residueParser;
 
+    /** Current nesting depth of JSON objects (used to detect top‑level members). */
     private int depth = 0;
 
     /**
@@ -61,7 +65,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
     /**
      * Called when entering the root {@code json} rule.
-     * Initialises the structure builder.
+     * Initialises the structure builder and the residue parser.
      *
      * @param ctx the parse tree context
      */
@@ -86,7 +90,8 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
     /**
      * Called when entering an {@code object} rule.
-     * If inside the "pairs" array, creates a new {@link Pair.Builder}.
+     * If inside the top‑level {@code "pairs"} array, creates a new {@link Pair.Builder}
+     * for the upcoming pair object.
      *
      * @param ctx the parse tree context
      */
@@ -99,7 +104,8 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
     /**
      * Called when exiting an {@code object} rule.
-     * If inside the "pairs" array, adds the completed pair to the structure builder.
+     * If inside the top‑level {@code "pairs"} array, builds the pair and adds it
+     * to the structure builder (if valid).
      *
      * @param ctx the parse tree context
      */
@@ -118,10 +124,13 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
     /**
      * Called when entering a {@code member} rule (a key‑value pair in a JSON object).
-     * Processes member names:
+     * Processes the member based on its name and current nesting depth.
      * <ul>
-     *   <li>If the member name is "pairs", sets the {@code inPairs} flag to true</li>
-     *   <li>Otherwise, if inside "pairs", calls {@link #buildPair(String, JSONParser.MemberContext)}</li>
+     *   <li>If the member is {@code "pairs"} at depth 1 (top‑level object), activates
+     *       the {@code inPairs} flag and builds the position map.</li>
+     *   <li>If inside {@code inPairs} and a pair builder exists, processes fields
+     *       {@code nt1}, {@code nt2}, and {@code LW} by delegating to the residue parser
+     *       or setting the bond type.</li>
      * </ul>
      *
      * @param ctx the parse tree context
@@ -154,8 +163,8 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
     /**
      * Called when exiting a {@code member} rule.
-     * Pops the member name from the stack and, if the stack becomes empty,
-     * exits the "pairs" and "nts" modes.
+     * Decrements the depth counter and, if the member is the top‑level {@code "pairs"},
+     * disables the {@code inPairs} flag.
      *
      * @param ctx the parse tree context
      */
@@ -163,12 +172,19 @@ public class JSONX3dnaListener extends JSONBaseListener {
     public void exitMember(JSONParser.MemberContext ctx) {
         depth--;
         String key = stripQuotes(ctx.STRING().getText());
-        logger.debug("Uscita pairs");
+        logger.debug("Exited pairs");
         if (key.equals("pairs")) {
             inPairs = false;
         }
     }
 
+    /**
+     * Builds the position map by scanning the top‑level {@code "pairs"} array.
+     * Collects all unique PDB residue numbers from {@code nt1} and {@code nt2} fields,
+     * sorts them, and assigns a zero‑based index to each.
+     *
+     * @param ctx the member context of the {@code "pairs"} key
+     */
     private void buildPositionMap(JSONParser.MemberContext ctx) {
         Set<Integer> positions = new HashSet<>();
         JSONParser.ArrayContext array = ctx.value().array();
@@ -202,10 +218,23 @@ public class JSONX3dnaListener extends JSONBaseListener {
     // Utility methods
     // ----------------------------------------------------------------------
 
+    /**
+     * Removes leading and trailing double quotes from a string.
+     *
+     * @param s the input string
+     * @return the unquoted string
+     */
     private static String stripQuotes(String s) {
         return s.replaceAll("^\"|\"$", "");
     }
 
+    /**
+     * Extracts the string value from a JSON value context.
+     * Handles both quoted strings and numbers.
+     *
+     * @param valueCtx the value context
+     * @return the extracted string, or {@code null} if not a string or number
+     */
     private String getStringValue(JSONParser.ValueContext valueCtx) {
         if (valueCtx.STRING() != null) {
             return stripQuotes(valueCtx.STRING().getText());
@@ -222,7 +251,15 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
     /**
      * Helper class for parsing x3dna residue identifiers.
-     * Handles formats: "G2", "GTP1", "A23/76"
+     * <p>
+     * Recognised formats:
+     * <ul>
+     *   <li>Standard: {@code "G2"} → base = {@code "G"}, position = {@code 2}</li>
+     *   <li>Uncommon residue (long name): {@code "GTP1"} → base = {@code "N"} (normalised), position = {@code 1}</li>
+     *   <li>Slash format: {@code "A23/76"} → base = {@code "N"} (normalised), position = {@code 76}</li>
+     * </ul>
+     * All identifiers are expected to be prefixed by a chain identifier and a dot,
+     * e.g., {@code "A.G2"}. The dot and chain part are stripped before parsing.
      */
     private static final class ResidueParser {
 
@@ -231,16 +268,21 @@ public class JSONX3dnaListener extends JSONBaseListener {
 
         private final Map<Integer, Integer> positionMap;
 
+        /**
+         * Creates a new residue parser with the given position mapping.
+         *
+         * @param positionMap mapping from original PDB numbers to zero‑based indices
+         */
         ResidueParser(Map<Integer, Integer> positionMap) {
             this.positionMap = positionMap;
         }
 
         /**
-         * Extracts and sets residue information (position and nucleotide) into a Pair.Builder.
+         * Extracts and sets residue information (position and nucleotide) into a {@link Pair.Builder}.
          *
-         * @param builder the Pair.Builder to update
-         * @param fullIdentifier the full string (e.g., "A.G2")
-         * @param isFirst true for nt1, false for nt2
+         * @param builder        the {@code Pair.Builder} to update
+         * @param fullIdentifier the full string (e.g., {@code "A.G2"})
+         * @param isFirst        {@code true} for {@code nt1}, {@code false} for {@code nt2}
          */
         void setResidue(Pair.Builder builder, String fullIdentifier, boolean isFirst) {
             String residuePart = extractIdentifier(fullIdentifier);
@@ -272,10 +314,10 @@ public class JSONX3dnaListener extends JSONBaseListener {
         }
 
         /**
-         * Extracts just the position number from a full identifier.
+         * Extracts just the PDB position number from a full identifier.
          *
-         * @param fullIdentifier the full string (e.g., "A.G2")
-         * @return the original PDB position, or null if extraction fails
+         * @param fullIdentifier the full string (e.g., {@code "A.G2"})
+         * @return the original PDB position number, or {@code null} if extraction fails
          */
         Integer extractPosition(String fullIdentifier) {
             String residuePart = extractIdentifier(fullIdentifier);
@@ -290,7 +332,10 @@ public class JSONX3dnaListener extends JSONBaseListener {
         }
 
         /**
-         * Extracts the residue part (after the dot) from a full identifier.
+         * Extracts the residue part (everything after the first dot) from a full identifier.
+         *
+         * @param full the full identifier (e.g., {@code "A.G2"})
+         * @return the residue part (e.g., {@code "G2"}) or {@code null} if input is invalid
          */
         private String extractIdentifier(String full) {
             if (full == null || full.isEmpty()) return null;
@@ -300,13 +345,16 @@ public class JSONX3dnaListener extends JSONBaseListener {
                 return full;
             }
             // In case of multiple dots, take everything after the first dot
-            // (e.g., "A.B.C2" -> "B.C2" – not expected in x3dna, but safe)
             return full.substring(full.indexOf('.') + 1);
         }
 
         /**
-         * Parses a residue string into [base, position].
-         * Handles: "G2", "GTP1", "A23/76"
+         * Parses a residue string into an array of [base, position].
+         * Handles formats: {@code "G2"}, {@code "GTP1"}, {@code "A23/76"}.
+         *
+         * @param residue the residue string (without chain prefix)
+         * @return a two‑element array: [base (or "N" for non‑standard), position as string],
+         *         or {@code null} if parsing fails
          */
         private String[] parse(String residue) {
             String basePart;
@@ -321,7 +369,6 @@ public class JSONX3dnaListener extends JSONBaseListener {
                 posStr = null;
             }
 
-            // Extract the base: first character of the alphabetic prefix
             Matcher baseMatcher = BASE_PATTERN.matcher(basePart);
             if (!baseMatcher.find()) {
                 logger.warn("No alphabetic base found in '{}'", basePart);
@@ -332,12 +379,10 @@ public class JSONX3dnaListener extends JSONBaseListener {
             if (rawBase.length() == 1) {
                 base = rawBase;
             } else {
-                // Non‑standard residue: log warning and normalise to 'N'
                 logger.warn("Uncommon residue '{}' (original part '{}') – normalising to 'N'", rawBase, basePart);
                 base = "N";
             }
 
-            // Extract position
             if (posStr == null) {
                 Matcher posMatcher = POSITION_PATTERN.matcher(basePart);
                 if (!posMatcher.find()) {
