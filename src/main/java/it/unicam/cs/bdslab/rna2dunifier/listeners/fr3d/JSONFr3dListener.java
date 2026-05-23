@@ -5,11 +5,9 @@ import it.unicam.cs.bdslab.JSON.JSONParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Custom ANTLR listener for parsing FR3D JSON output files.
@@ -34,23 +32,19 @@ public class JSONFr3dListener extends JSONBaseListener {
     /** Builder for the final RNA secondary structure. */
     private ExtendedRNASecondaryStructure.Builder structureBuilder;
 
-    /** Builder for the current base pair being processed. */
-    private Pair.Builder pairBuilder;
-
     /** The final built structure. */
     private ExtendedRNASecondaryStructure structure;
 
-    /** Stack tracking JSON object member names (keys) to maintain context. */
-    private final Stack<String> positionStack = new Stack<>();
-
-    /** Flag indicating whether we are inside the "annotations" array. */
-    private boolean inAnnotations = false;
-
     /** Set of original sequence IDs extracted from the JSON. */
-    private final Set<Integer> positions = new HashSet<>();
+    private final Set<Integer> seenPositions = new HashSet<>();
 
     /** Maps original sequence IDs to zero‑based indices. */
     private final Map<Integer, Integer> positionMap = new HashMap<>();
+
+    private PairBuilderHelper pairHelper;
+
+    /** Flag indicating whether we are inside the "annotations" array. */
+    private boolean inAnnotations = false;
 
     /**
      * Returns the parsed RNA secondary structure.
@@ -82,9 +76,11 @@ public class JSONFr3dListener extends JSONBaseListener {
     @Override
     public void exitJson(JSONParser.JsonContext ctx) {
         this.structure = structureBuilder.build();
-        logger.info("Finished FR3D parsing: sequence length={}, pairs={}",
-                structure.getSequence() != null ? structure.getSequence().length() : 0,
-                structure.getPairs().size());
+        logger.info(
+            "Finished FR3D parsing: sequence length={}, pairs={}",
+            structure.getSequence() != null ? structure.getSequence().length() : 0,
+            structure.getPairs().size()
+        );
     }
 
     /**
@@ -96,7 +92,8 @@ public class JSONFr3dListener extends JSONBaseListener {
     @Override
     public void enterObject(JSONParser.ObjectContext ctx) {
         if (inAnnotations) {
-            pairBuilder = new Pair.Builder();
+            pairHelper = new PairBuilderHelper(positionMap);
+            pairHelper.newPair();
         }
     }
 
@@ -108,9 +105,13 @@ public class JSONFr3dListener extends JSONBaseListener {
      */
     @Override
     public void exitObject(JSONParser.ObjectContext ctx) {
-        if (inAnnotations) {
-            structureBuilder.addPair(pairBuilder.build());
+        if (inAnnotations && pairHelper != null) {
+            Pair p = pairHelper.build();
+            if (p != null) {
+                structureBuilder.addPair(p);
+            }
         }
+        pairHelper = null;
     }
 
     /**
@@ -128,145 +129,36 @@ public class JSONFr3dListener extends JSONBaseListener {
      */
     @Override
     public void enterMember(JSONParser.MemberContext ctx) {
-        String memberName = ctx.STRING().getText().replaceAll("\"", "");
-        positionStack.push(memberName);
-        if (inAnnotations) {
-            buildPair(ctx.STRING().getText().replaceAll("\"", ""), ctx);
-        } else {
-            switch (memberName) {
+        String key = stripQuotes(ctx.STRING().getText());
+
+        if (key.equals("annotations")) {
+            inAnnotations = true;
+            // First pass: collect all seq_id values from annotations array
+            collectPositionsFromAnnotations(ctx);
+            return;
+        }
+
+        // Handle top-level fields before or after annotations
+        if (!inAnnotations) {
+            switch (key) {
                 case "pdb_id":
-                    String pdbId = ctx.value().STRING().getText().replaceAll("\"", "");
-                    structureBuilder.addHeaderInfo("PDB ID", pdbId);
-                    logger.debug("PDB ID: {}", pdbId);
+                    structureBuilder.addHeaderInfo("PDB ID", getStringValue(ctx.value()));
                     break;
                 case "chain_id":
-                    String chainId = ctx.value().STRING().getText().replaceAll("\"", "");
-                    structureBuilder.addHeaderInfo("Chain ID", chainId);
-                    logger.debug("Chain ID: {}", chainId);
-                    break;
-                case "annotations":
-                    enterAnnotations(ctx);
+                    structureBuilder.addHeaderInfo("Chain ID", getStringValue(ctx.value()));
                     break;
                 case "modified":
-                    addToPositions(ctx.value().array().value().stream()
-                            .map(JSONParser.ValueContext::object)
-                            .collect(Collectors.toList())
-                    );
+                    collectPositionsFromModified(ctx);
                     break;
             }
-        }
-    }
-
-    /**
-     * Handles the "annotations" member: enables the annotation flag,
-     * collects all sequence IDs from the annotations array, and builds
-     * a mapping from original IDs to zero‑based indices.
-     *
-     * @param ctx the member context containing the annotations array
-     */
-    private void enterAnnotations(JSONParser.MemberContext ctx) {
-        inAnnotations = true;
-        logger.debug("Entering annotations array");
-
-        // Collect all seq_id references from annotations
-        List<JSONParser.ObjectContext> annotationObjects = ctx.value().array().value().stream()
-                .map(JSONParser.ValueContext::object)
-                .collect(Collectors.toList());
-        addToPositions(annotationObjects);
-
-        List<Integer> sortedPositions = new ArrayList<>(positions);
-        Collections.sort(sortedPositions);
-
-        int i = 0;
-        for (Integer position : sortedPositions) {
-            positionMap.put(position, i++);
-        }
-        logger.info("Built position map: {} residues (original IDs → 0‑based indices)", positionMap.size());
-    }
-
-    /**
-     * Extracts sequence IDs (seq_id, seq_id1, seq_id2) from a list of JSON objects
-     * and adds them to the {@code positions} set.
-     *
-     * @param objects a list of object contexts (each representing a residue or pair)
-     */
-    private void addToPositions(List<JSONParser.ObjectContext> objects) {
-        objects.forEach(obj ->
-                obj.member().stream()
-                        .filter(s -> {
-                            String name = s.STRING().getText().replaceAll("\"", "");
-                            return name.contains("seq_id1") || name.contains("seq_id2") || name.contains("seq_id");
-                        })
-                        .forEach(s -> {
-                            int seqId = Integer.parseInt(s.value().STRING().getText().replaceAll("\"", ""));
-                            positions.add(seqId);
-                            logger.trace("Added sequence ID: {}", seqId);
-                        })
-        );
-    }
-
-    /**
-     * Builds the current {@link Pair} by setting fields based on the member name.
-     * Called only when {@code inAnnotations} is true.
-     * <p>
-     * Recognised member names:
-     * <ul>
-     *   <li>"seq_id1" – sets the first residue position (mapped)</li>
-     *   <li>"seq_id2" – sets the second residue position (mapped)</li>
-     *   <li>"nt1" – sets the first nucleotide type</li>
-     *   <li>"nt2" – sets the second nucleotide type</li>
-     *   <li>"bp" – sets the bond type (from string)</li>
-     * </ul>
-     *
-     * @param item the member name (key)
-     * @param ctx  the member context containing the value
-     */
-    private void buildPair(String item, JSONParser.MemberContext ctx) {
-        String val = ctx.value().STRING().getText().replaceAll("\"", "");
-
-        switch (item) {
-            case "seq_id1":
-                int orig1 = Integer.parseInt(val);
-                Integer zero1 = positionMap.get(orig1);
-                if (zero1 == null) {
-                    logger.warn("seq_id1 {} not found in position map", orig1);
-                } else {
-                    pairBuilder.setPos1(zero1);
-                    logger.trace("Set pos1: {} → {}", orig1, zero1);
+        } else {
+            // Inside annotations, pass key‑value to the helper
+            if (pairHelper != null) {
+                String val = getStringValue(ctx.value());
+                if (val != null) {
+                    pairHelper.setField(key, val);
                 }
-                break;
-            case "seq_id2":
-                int orig2 = Integer.parseInt(val);
-                Integer zero2 = positionMap.get(orig2);
-                if (zero2 == null) {
-                    logger.warn("seq_id2 {} not found in position map", orig2);
-                } else {
-                    pairBuilder.setPos2(zero2);
-                    logger.trace("Set pos2: {} → {}", orig2, zero2);
-                }
-                break;
-            case "nt1":
-                if (val.length() > 1) {
-                    logger.warn("Uncommon residue for nt1: '{}' (length >1) – storing as is, but may be non‑standard", val);
-                }
-                pairBuilder.setNucleotide1(val);
-                logger.trace("Set nt1: {}", val);
-                break;
-            case "nt2":
-                if (val.length() > 1) {
-                    logger.warn("Uncommon residue for nt2: '{}' (length >1) – storing as is, but may be non‑standard", val);
-                }
-                pairBuilder.setNucleotide2(val);
-                logger.trace("Set nt2: {}", val);
-                break;
-            case "bp":
-                BondType type = BondType.fromString(val);
-                if (type == null || type == BondType.UNKNOWN) {
-                    logger.warn("Unknown bond type '{}'", val);
-                }
-                pairBuilder.setType(type);
-                logger.trace("Set bond type: {}", val);
-                break;
+            }
         }
     }
 
@@ -279,10 +171,164 @@ public class JSONFr3dListener extends JSONBaseListener {
      */
     @Override
     public void exitMember(JSONParser.MemberContext ctx) {
-        positionStack.pop();
-        if (positionStack.isEmpty()) {
+        String key = stripQuotes(ctx.STRING().getText());
+        if (key.equals("annotations")) {
             inAnnotations = false;
-            logger.debug("Exited annotations mode");
+            pairHelper = null;
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // Helper methods
+    // ----------------------------------------------------------------------
+
+    private static String stripQuotes(String s) {
+        return s.replaceAll("^\"|\"$", "");
+    }
+
+    private String getStringValue(JSONParser.ValueContext valueCtx) {
+        if (valueCtx.STRING() != null) {
+            return stripQuotes(valueCtx.STRING().getText());
+        }
+        if (valueCtx.NUMBER() != null) {
+            return valueCtx.NUMBER().getText();
+        }
+        // Boolean, null, object, array – not used for our fields
+        return null;
+    }
+
+    private void collectPositionsFromAnnotations(JSONParser.MemberContext ctx) {
+        // Walk the annotations array and collect all seq_id1, seq_id2, seq_id
+        JSONParser.ArrayContext array = ctx.value().array();
+        if (array == null) return;
+
+        for (JSONParser.ValueContext val : array.value()) {
+            JSONParser.ObjectContext obj = val.object();
+            if (obj == null) continue;
+            for (JSONParser.MemberContext member : obj.member()) {
+                String key = stripQuotes(member.STRING().getText());
+                if (key.startsWith("seq_id")) {
+                    String strVal = getStringValue(member.value());
+                    if (strVal != null) {
+                        try {
+                            seenPositions.add(Integer.parseInt(strVal));
+                        } catch (NumberFormatException e) {
+                            logger.warn("Invalid seq_id value: {}", strVal);
+                        }
+                    }
+                }
+            }
+        }
+
+        buildPositionMapping();
+    }
+
+    private void collectPositionsFromModified(JSONParser.MemberContext ctx) {
+        JSONParser.ArrayContext array = ctx.value().array();
+        if (array == null) return;
+
+        for (JSONParser.ValueContext val : array.value()) {
+            JSONParser.ObjectContext obj = val.object();
+            if (obj == null) continue;
+            for (JSONParser.MemberContext member : obj.member()) {
+                String key = stripQuotes(member.STRING().getText());
+                if ("seq_id".equals(key)) {
+                    String strVal = getStringValue(member.value());
+                    if (strVal != null) {
+                        try {
+                            seenPositions.add(Integer.parseInt(strVal));
+                        } catch (NumberFormatException e) {
+                            logger.warn("Invalid seq_id in modified: {}", strVal);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void buildPositionMapping() {
+        List<Integer> sorted = new ArrayList<>(seenPositions);
+        Collections.sort(sorted);
+        for (int i = 0; i < sorted.size(); i++) {
+            positionMap.put(sorted.get(i), i);
+        }
+        logger.debug("Built position map with {} entries", positionMap.size());
+    }
+
+    // ----------------------------------------------------------------------
+    // Helper class for pair management
+    // ----------------------------------------------------------------------
+    private static final class PairBuilderHelper {
+
+        private final Map<Integer, Integer> positionMap;
+        private Pair.Builder currentBuilder;
+
+        PairBuilderHelper(Map<Integer, Integer> positionMap) {
+            this.positionMap = positionMap;
+        }
+
+        void newPair() {
+            currentBuilder = new Pair.Builder();
+        }
+
+        void setField(String key, String value) {
+            if (currentBuilder == null) return;
+
+            switch (key) {
+                case "seq_id1":
+                    setPosition(value, currentBuilder::setPos1);
+                    break;
+                case "seq_id2":
+                    setPosition(value, currentBuilder::setPos2);
+                    break;
+                case "nt1":
+                    currentBuilder.setNucleotide1(sanitizeNucleotide(value));
+                    break;
+                case "nt2":
+                    currentBuilder.setNucleotide2(sanitizeNucleotide(value));
+                    break;
+                case "bp":
+                    BondType type = BondType.fromString(value);
+                    if (type == BondType.UNKNOWN) {
+                        logger.warn("Unknown bond type '{}'", value);
+                    }
+                    currentBuilder.setType(type);
+                    break;
+            }
+        }
+
+        private void setPosition(String value, java.util.function.Consumer<Integer> setter) {
+            try {
+                int orig = Integer.parseInt(value);
+                Integer zero = positionMap.get(orig);
+                if (zero == null) {
+                    logger.error("Position {} not found in map, pair will be incomplete", orig);
+                    currentBuilder = null;
+                } else {
+                    setter.accept(zero);
+                }
+            } catch (NumberFormatException e) {
+                logger.error("Invalid position value '{}'", value);
+                currentBuilder = null;
+            }
+        }
+
+        private String sanitizeNucleotide(String nt) {
+            if (nt.length() > 1) {
+                logger.warn("Uncommon residue '{}' – keeping as is (may be non‑standard)", nt);
+            }
+            return nt;
+        }
+
+        Pair build() {
+            if (currentBuilder == null) return null;
+            Pair p = currentBuilder.build();
+            // Validate that both positions are set (not default 0 when they should be positive)
+            if (p.getPos1() < 0 || p.getPos2() < 0) {
+                logger.warn("Skipping pair with invalid indices: ({},{})", p.getPos1(), p.getPos2());
+                return null;
+            }
+            return p;
         }
     }
 }
