@@ -38,13 +38,10 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
     /** Builder for the current strand being processed. */
     private ExtendedRNASecondaryStructure.Builder currentStructureBuilder;
 
-    /** Bond type for the current interaction line (applies to all pairs in that line). */
-    private BondType currentInteractionType;
-
     /** Nucleotide sequence of the current strand (used to retrieve base letters). */
     private String currentSequence;
 
-    private final InteractinPairBuilder pairBuilder = new InteractinPairBuilder();
+    private final InteractingPairBuilder pairBuilder = new InteractingPairBuilder();
 
     /**
      * Returns the list of parsed RNA secondary structures.
@@ -121,8 +118,9 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
     @Override
     public void enterInteraction(RNApolisGrammarParser.InteractionContext ctx) {
         String typeStr = ctx.INTERACTION_TYPE().getText();
-        this.currentInteractionType = BondType.fromString(typeStr);
-        if (this.currentInteractionType == BondType.UNKNOWN) {
+        // Bond type for the current interaction line (applies to all pairs in that line).
+        BondType currentInteractionType = BondType.fromString(typeStr);
+        if (currentInteractionType == BondType.UNKNOWN) {
             logger.warn("Unknown interaction type '{}' – pairs will have unknown BondType", typeStr);
         }
         String interactionSeq = ctx.INTERACTION_SEQUENCE().getText();
@@ -140,7 +138,7 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
         pairs.forEach(pair -> currentStructureBuilder.addPair(pair));
     }
 
-    private static final class InteractinPairBuilder {
+    private static final class InteractingPairBuilder {
 
         private static final Map<Character, Character> OPEN_TO_CLOSE = new HashMap<>();
         private static final Map<Character, Character> CLOSE_TO_OPEN = new HashMap<>();
