@@ -5,10 +5,9 @@ import it.unicam.cs.bdslab.barnaba.BarnabaGrammarParser;
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 /**
  * Custom ANTLR listener for parsing Barnaba output files.
@@ -45,8 +44,8 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
     /** Maps original PDB residue numbers to zero‑based indices in the reconstructed sequence. */
     private final Map<Integer, Integer> nucleotidePositionMap = new HashMap<>();
 
-    /** List of nucleotide characters building the sequence. */
-    private final List<String> sequence = new ArrayList<>();
+    /** StringBuilder for the sequence being built. */
+    private final StringBuilder sequenceBuilder = new StringBuilder();
 
     /** Number of uncommon residues skipped so far. */
     private int uncommonResidues = 0;
@@ -83,84 +82,9 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
     @Override
     public void exitBarnabaFile(BarnabaGrammarParser.BarnabaFileContext ctx) {
         if (uncommonResidues > 0) {
-            logger.info("Total uncommon residues skipped (no placeholders inserted): {}", uncommonResidues);
+            logger.info("Total uncommon residues skipped: {}", uncommonResidues);
         }
         this.structure = structureBuilder.build();
-    }
-
-    /**
-     * Called when entering a {@code residueSpec} rule (a single nucleotide specification).
-     * Sets either the first or second nucleotide of the current pair based on the {@code nt1Viewed} flag.
-     *
-     * @param ctx the parse tree context
-     */
-    @Override
-    public void enterResidueSpec(BarnabaGrammarParser.ResidueSpecContext ctx) {
-        int pdbNumber = Integer.parseInt(ctx.INT().getFirst().getText());
-        Integer index = nucleotidePositionMap.get(pdbNumber);
-        if (index == null) {
-            logger.warn("Residue {} appears in interaction but was not found in sequence mapping. Skipping pair.", pdbNumber);
-            return;
-        }
-        if (!nt1Viewed) {
-            nt1Viewed = true;
-            this.pairBuilder.setNucleotide1(ctx.NUCLEOTIDE().getText());
-            this.pairBuilder.setPos1(index);
-        } else {
-            nt1Viewed = false;
-            this.pairBuilder.setNucleotide2(ctx.NUCLEOTIDE().getText());
-            this.pairBuilder.setPos2(index);
-        }
-    }
-
-    /**
-     * Called when entering an {@code interactionLine} rule.
-     * Creates a new {@link Pair.Builder} and sets its bond type from the annotation.
-     *
-     * @param ctx the parse tree context
-     */
-    @Override
-    public void enterInteractionLine(BarnabaGrammarParser.InteractionLineContext ctx) {
-        this.pairBuilder = new Pair.Builder();
-        this.pairBuilder.setType(getBondType(ctx.ANNOTATION().getText()));
-    }
-
-    /**
-     * Converts a Barnaba annotation string into a {@link BondType}.
-     * <p>
-     * Stacking annotations (e.g., {@code >>}) are mapped to {@code "stacking"}.
-     * Base‑pair annotations like {@code WCc} are transformed to {@code cWW}
-     * (the internal bond type format).
-     *
-     * @param annotation the raw annotation from the grammar (e.g., "WWc", ">>", "GUc")
-     * @return the corresponding {@code BondType}
-     */
-    private BondType getBondType(String annotation) {
-        if (annotation.matches("[<>][<>]")) {
-            return BondType.fromString("stacking");
-        } else {
-            String pairs = annotation.substring(0, 2);
-            if (pairs.equals("WC") || pairs.equals("GU")) {
-                // WWc pairs between complementary bases are called WCc or GUc.
-                annotation = annotation.replace(pairs, "WW");
-            }
-            String lastChar = annotation.substring(annotation.length() - 1);
-            String prefix = annotation.substring(0, annotation.length() - 1);
-            return BondType.fromString(lastChar + prefix);
-        }
-    }
-
-    /**
-     * Called when exiting an {@code interactionLine} rule.
-     * Adds the completed pair to the structure builder.
-     *
-     * @param ctx the parse tree context
-     */
-    @Override
-    public void exitInteractionLine(BarnabaGrammarParser.InteractionLineContext ctx) {
-        Pair pair = pairBuilder.build();
-        if (Math.abs(pair.getPos1() - pair.getPos2()) > 1 || !pair.getType().equals(BondType.STACKING))
-            this.structureBuilder.addPair(pair);
     }
 
     /**
@@ -177,46 +101,137 @@ public class BarnabaCustomListener extends BarnabaGrammarBaseListener {
     @Override
     public void enterCommentLine(BarnabaGrammarParser.CommentLineContext ctx) {
         String comment = ctx.COMMENT().getText().replace("#", "").trim();
-        String[] splittedComment = comment.split(" ");
+        String[] parts = comment.split(" ");
+        if (parts.length == 0) return;
 
-        switch (splittedComment[0]) {
+        switch (parts[0]) {
             case "Skipping":
                 uncommonResidues++;
                 logger.warn("{} (no placeholder inserted)", comment);
                 break;
             case "sequence":
-                String sequenceRaw = splittedComment[1];
-                Arrays.stream(sequenceRaw.split("-")).forEach(this::enterSequenceElement);
-                StringBuilder seq = new StringBuilder();
-                sequence.forEach(seq::append);
-                structureBuilder = structureBuilder.setSequence(seq.toString());
+                if (parts.length > 1) {
+                    String seqRaw = parts[1];
+                    Arrays.stream(seqRaw.split("-")).forEach(this::processSequenceElement);
+                    structureBuilder.setSequence(sequenceBuilder.toString());
+                }
                 break;
             case "PDB":
-                this.structureBuilder.addHeaderInfo("File name", splittedComment[1]);
+                if (parts.length > 1) {
+                    structureBuilder.addHeaderInfo("File name", parts[1]);
+                }
                 break;
         }
     }
 
-    /**
-     * Processes a single element of the sequence comment (e.g., "A_1").
-     * Maps the original PDB residue number to a zero‑based index,
-     * handles gaps caused by skipped residues, and builds the nucleotide list.
-     *
-     * @param element a string in the format "NUCLEOTIDE_position" (e.g., "A_42")
-     */
-    private void enterSequenceElement(String element) {
-        String[] elements = element.split("_");
-
-        if (elements.length != 3) {
+    private void processSequenceElement(String element) {
+        String[] fields = element.split("_");
+        if (fields.length != 3) {
             logger.warn("Malformed sequence element: {}", element);
             return;
         }
+        String nucleotide = fields[0];
+        int pdbNumber = Integer.parseInt(fields[1]);
+        int currentIndex = sequenceBuilder.length();
+        nucleotidePositionMap.put(pdbNumber, currentIndex);
+        sequenceBuilder.append(nucleotide);
+    }
 
-        String nucleotide = elements[0];
+    /**
+     * Called when entering an {@code interactionLine} rule.
+     * Creates a new {@link Pair.Builder} and sets its bond type from the annotation.
+     *
+     * @param ctx the parse tree context
+     */
+    @Override
+    public void enterInteractionLine(BarnabaGrammarParser.InteractionLineContext ctx) {
+        this.pairBuilder = new Pair.Builder();
+        this.pairBuilder.setType(AnnotationMapper.toBondType(ctx.ANNOTATION().getText()));
+        this.nt1Viewed = false;
+    }
 
-        int elPosition = Integer.parseInt(elements[1]);
+    /**
+     * Called when exiting an {@code interactionLine} rule.
+     * Adds the completed pair to the structure builder.
+     *
+     * @param ctx the parse tree context
+     */
+    @Override
+    public void exitInteractionLine(BarnabaGrammarParser.InteractionLineContext ctx) {
+        Pair pair = pairBuilder.build();
+        if (!shouldSkipPair(pair)) {
+            structureBuilder.addPair(pair);
+        }
+    }
 
-        nucleotidePositionMap.put(elPosition, sequence.size()); // 0-index
-        sequence.add(nucleotide);
+    /**
+     * Called when entering a {@code residueSpec} rule (a single nucleotide specification).
+     * Sets either the first or second nucleotide of the current pair based on the {@code nt1Viewed} flag.
+     *
+     * @param ctx the parse tree context
+     */
+    @Override
+    public void enterResidueSpec(BarnabaGrammarParser.ResidueSpecContext ctx) {
+        int pdbNumber = Integer.parseInt(ctx.INT().getFirst().getText());
+        Integer index = nucleotidePositionMap.get(pdbNumber);
+        if (index == null) {
+            logger.warn("Residue {} not found in sequence mapping. Skipping pair.", pdbNumber);
+            return;
+        }
+        if (!nt1Viewed) {
+            this.pairBuilder.setNucleotide1(ctx.NUCLEOTIDE().getText());
+            this.pairBuilder.setPos1(index);
+            nt1Viewed = true;
+        } else {
+            this.pairBuilder.setNucleotide2(ctx.NUCLEOTIDE().getText());
+            this.pairBuilder.setPos2(index);
+            nt1Viewed = false;
+        }
+    }
+
+    private boolean shouldSkipPair(Pair pair) {
+        // Skip only adjacent stacking interactions
+        return Math.abs(pair.getPos1() - pair.getPos2()) == 1 && pair.getType() == BondType.STACKING;
+    }
+
+    // ----------------------------------------------------------------------
+    // Helper class for annotation conversion
+    // ----------------------------------------------------------------------
+    private static final class AnnotationMapper {
+
+        private static final Map<String, BondType> ANNOTATION_MAP = new HashMap<>();
+
+        static {
+            // Stacking annotations
+            ANNOTATION_MAP.put(">>", BondType.STACKING);
+            ANNOTATION_MAP.put("<<", BondType.STACKING);
+            ANNOTATION_MAP.put("<>", BondType.STACKING);
+            ANNOTATION_MAP.put("><", BondType.STACKING);
+            // Canonical and wobble pairs
+            ANNOTATION_MAP.put("WCc", BondType.fromString("cWW"));
+            ANNOTATION_MAP.put("GUc", BondType.fromString("cWW"));
+        }
+
+        static BondType toBondType(String annotation) {
+            // Check predefined mappings
+            BondType bt = ANNOTATION_MAP.get(annotation);
+            if (bt != null) {
+                return bt;
+            }
+            // Handle dynamic patterns like "WHc", "HSt", etc.
+            if (annotation.matches("[WHS][WHS][ct]")) {
+                String edges = annotation.substring(0, 2);
+                String orientation = annotation.substring(2);
+                // "WHc" -> "cWH"
+                String transformed = orientation + edges;
+                BondType dynamicType = BondType.fromString(transformed);
+                if (dynamicType != BondType.UNKNOWN) {
+                    return dynamicType;
+                }
+            }
+            // Unknown annotation
+            logger.warn("Unknown annotation: '{}' – mapped to UNKNOWN", annotation);
+            return BondType.UNKNOWN;
+        }
     }
 }
