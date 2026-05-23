@@ -8,9 +8,6 @@ import it.unicam.cs.bdslab.rnaview.RNAviewGrammarParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Objects;
-
 /**
  * Custom ANTLR listener for parsing RNAview output files.
  *
@@ -23,6 +20,9 @@ import java.util.Objects;
  *   <li>Conversion of RNAview edge notations into internal {@link BondType} format,
  *       handling special cases like ".", "?", "-", "+"</li>
  * </ul>
+ *
+ * <p>The actual edge‑pair to bond‑type mapping is delegated to a static inner helper class
+ * {@link EdgePairConverter} for better separation of concerns and testability.
  *
  * @author Francesco Palozzi
  * @see ExtendedRNASecondaryStructure
@@ -91,37 +91,45 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
     public void enterBasePairLine(RNAviewGrammarParser.BasePairLineContext ctx) {
         this.pairBuilder = new Pair.Builder();
 
+        // Parse assigned numbers (e.g., "2_54,")
         String positionsString = ctx.ASSIGNED_NUMBERS().getText().replaceAll(",", "");
         String[] posParts = positionsString.split("_");
         if (posParts.length != 2) {
             logger.warn("Unexpected ASSIGNED_NUMBERS format: '{}' – expected two numbers separated by '_'", positionsString);
-        }
-
-        try {
-            int[] positions = Arrays.stream(posParts)
-                    .mapToInt(Integer::parseInt)
-                    .toArray();
-            this.pairBuilder.setPos1(positions[0] - 1);
-            this.pairBuilder.setPos2(positions[1] - 1);
-        } catch (NumberFormatException e) {
-            logger.warn("Failed to parse positions from '{}'", positionsString, e);
+            pairBuilder = null;
             return;
         }
 
+        try {
+            int pos1 = Integer.parseInt(posParts[0]) - 1;
+            int pos2 = Integer.parseInt(posParts[1]) - 1;
+            pairBuilder.setPos1(pos1).setPos2(pos2);
+        } catch (NumberFormatException e) {
+            logger.warn("Failed to parse positions from '{}'", positionsString, e);
+            pairBuilder = null;
+            return;
+        }
+
+        // Parse base pair (e.g., "G-U")
         String basePair = ctx.BASE_PAIR().getText();
         String[] bases = basePair.split("-");
         if (bases.length != 2) {
             logger.warn("Unexpected BASE_PAIR format: '{}' – expected two bases separated by '-'", basePair);
+            pairBuilder = null;
+            return;
         }
+        pairBuilder.setNucleotide1(normalizeResidue(bases[0]))
+                .setNucleotide2(normalizeResidue(bases[1]));
 
-        this.pairBuilder.setNucleotide1(getResidue(bases[0]));
-        this.pairBuilder.setNucleotide2(getResidue(bases[1]));
-        logger.debug("Base pair line: {}–{} ({}‑{})",
-                positionsString, basePair, bases[0], bases[1]);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Base pair line: {}–{} ({}‑{})", positionsString, basePair, bases[0], bases[1]);
+        }
     }
 
-    private String getResidue(String residue) {
-        return Character.isLowerCase(residue.charAt(0)) ? "N" : residue;
+    private String normalizeResidue(String residue) {
+        if (residue == null || residue.isEmpty()) return "N";
+        char first = residue.charAt(0);
+        return Character.isLowerCase(first) ? "N" : residue;
     }
 
     /**
@@ -133,9 +141,7 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
     @Override
     public void exitBasePairLine(RNAviewGrammarParser.BasePairLineContext ctx) {
         if (pairBuilder != null) {
-            this.structureBuilder.addPair(pairBuilder.build());
-        } else {
-            logger.warn("Attempted to exit a base pair line without a valid pairBuilder");
+            structureBuilder.addPair(pairBuilder.build());
         }
     }
 
@@ -151,54 +157,73 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
      */
     @Override
     public void enterAnnotation(RNAviewGrammarParser.AnnotationContext ctx) {
-        if (ctx.STACKED() == null) {
+        if (pairBuilder == null) {
+            logger.warn("Annotation encountered but no valid pair builder – skipping");
+            return;
+        }
+        if (ctx.STACKED() != null) {
+            pairBuilder.setType(BondType.STACKING);
+            logger.trace("Annotation: stacking interaction");
+        } else {
             String edgePair = ctx.EDGE_PAIR().getText();
             String orientation = ctx.ORIENTATION().getText();
-            BondType type = getType(edgePair, orientation);
-            this.pairBuilder.setType(type);
-            logger.trace("Annotation: edgePair={}, orientation={} → BondType={}", edgePair, orientation, type);
-        } else {
-            this.pairBuilder.setType(BondType.fromString("stacking"));
-            logger.trace("Annotation: stacking interaction");
+            BondType type = EdgePairConverter.toBondType(edgePair, orientation);
+            pairBuilder.setType(type);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Annotation: edgePair={}, orientation={} → BondType={}", edgePair, orientation, type);
+            }
         }
     }
 
     /**
-     * Converts an RNAview edge pair and orientation into an internal {@link BondType}.
-     * <p>
-     * Edge pair format is {@code X/Y} (e.g., "W/W", "S/H"). Orientation is either
-     * "cis" (converted to 'c') or "trans" (converted to 't').
-     * <p>
-     * Special cases:
-     * <ul>
-     *   <li>If either edge is '.' or '?' → returns {@code BondType.UNKNOWN} (via fromString(null))</li>
-     *   <li>If both edges are identical and are '-' or '+' → returns "cWW" (or "tWW")</li>
-     *   <li>Otherwise returns the concatenated orientation + edge1 + edge2</li>
-     * </ul>
+     * Helper class that converts an RNAview edge pair (e.g., "W/W", "S/H", "-/-")
+     * and orientation ("cis"/"trans") into the corresponding {@link BondType}.
      *
-     * @param val         the edge pair string (e.g., "W/W")
-     * @param orientation the orientation string ("cis" or "trans")
-     * @return the corresponding {@code BondType}
+     * <p>This class is stateless and thread‑safe; its static mapping tables are built once.
+     * The conversion rules are:
+     * <ul>
+     *   <li>If either edge is '.' or '?' → {@code BondType.UNKNOWN}.</li>
+     *   <li>If both edges are identical and are '-' or '+' → canonical pair (cWW or tWW).</li>
+     *   <li>Otherwise, the result is constructed as {@code prefix + edge1 + edge2},
+     *       where prefix is 'c' for cis and 't' for trans.</li>
+     * </ul>
      */
-    private BondType getType(String val, String orientation) {
-        String o = Objects.equals(orientation, "cis") ? "c" : "t";
-        if (val.length() < 3 || val.charAt(1) != '/') {
-            logger.warn("Malformed EDGE_PAIR string: '{}' – expected format X/Y", val);
-            return BondType.fromString(null);
-        }
-        String edge1 = val.substring(0, 1);
-        String edge2 = val.substring(2, 3);
+    private static final class EdgePairConverter {
 
-        if (edge1.matches("[.?]") || edge2.matches("[.?]")) {
-            logger.warn("Unknown edge character(s) in '{}' – setting bond type to UNKNOWN", val);
-            return BondType.fromString(null);
+        // No instantiation
+        private EdgePairConverter() {
+            throw new UnsupportedOperationException("Utility class");
         }
 
-        if (edge1.equals(edge2) && edge1.matches("[-+]")) {
-            // Special case: '-' or '+' edges are treated as cWW/tWW
-            return BondType.fromString(o + "WW");
-        }
+        /**
+         * Converts an RNAview edge pair and orientation to a BondType.
+         *
+         * @param edgePair    the edge pair string (e.g., "W/W", "-/-", "S/H")
+         * @param orientation the orientation ("cis" or "trans")
+         * @return the corresponding BondType, or BondType.UNKNOWN if not recognised
+         */
+        static BondType toBondType(String edgePair, String orientation) {
+            String prefix = "cis".equals(orientation) ? "c" : "t";
+            if (edgePair == null || edgePair.length() < 3 || edgePair.charAt(1) != '/') {
+                logger.warn("Malformed EDGE_PAIR string: '{}' – expected format X/Y", edgePair);
+                return BondType.UNKNOWN;
+            }
+            char edge1 = edgePair.charAt(0);
+            char edge2 = edgePair.charAt(2);
 
-        return BondType.fromString(o + edge1 + edge2);
+            // Unknown edge characters
+            if (edge1 == '.' || edge2 == '.' || edge1 == '?' || edge2 == '?') {
+                logger.warn("Unknown edge character(s) in '{}' – setting bond type to UNKNOWN", edgePair);
+                return BondType.UNKNOWN;
+            }
+
+            // Special case: '-' or '+' indicate canonical Watson-Crick pairs (WW)
+            if (edge1 == edge2 && (edge1 == '-' || edge1 == '+')) {
+                return BondType.fromString(prefix + "WW");
+            }
+
+            // Default: combine prefix and edges
+            return BondType.fromString(prefix + edge1 + edge2);
+        }
     }
 }
