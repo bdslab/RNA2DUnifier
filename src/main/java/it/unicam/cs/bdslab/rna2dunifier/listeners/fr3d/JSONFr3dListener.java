@@ -367,7 +367,8 @@ public class JSONFr3dListener extends JSONBaseListener {
          */
         private String sanitizeNucleotide(String nt) {
             if (nt.length() > 1) {
-                logger.warn("Uncommon residue '{}' – keeping as is (may be non‑standard)", nt);
+                logger.warn("Uncommon residue '{}' – transforming to 'N'", nt);
+                return "N";
             }
             return nt;
         }
