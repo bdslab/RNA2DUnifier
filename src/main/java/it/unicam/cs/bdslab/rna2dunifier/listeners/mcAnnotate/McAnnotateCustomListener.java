@@ -38,17 +38,11 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     /** The final built structure. */
     private ExtendedRNASecondaryStructure structure;
 
-    /** Accumulator for the nucleotide sequence. */
-    private String sequence;
+    /** StringBuilder for efficient sequence accumulation. */
+    private final StringBuilder sequenceBuilder = new StringBuilder();
 
     /** Maps original residue numbers (from PDB) to zero‑based indices. */
     private final Map<Integer, Integer> positionMap = new HashMap<>();
-
-    /** Keeps track of the last processed original residue number to detect jumps. */
-    private int lastResidueNumber = -1;
-
-    /** Counter for zero‑based indices. */
-    private int currentZeroBased = 0;
 
     /**
      * Returns the parsed RNA secondary structure.
@@ -80,12 +74,12 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     @Override
     public void exitMcAnnotateFile(McAnnotateGrammarParser.McAnnotateFileContext ctx) {
         this.structure = structureBuilder.build();
-        logger.info(
-            "Finished parsing mc‑annotate file: sequence length={}, pairs={}",
-            sequence != null ? sequence.length() : 0,
-            structure.getPairs().size()
-        );
+        logger.info("Sequence length: {}, total pairs: {}", sequenceBuilder.length(), structure.getPairs().size());
     }
+
+    // ----------------------------------------------------------------------
+    // Residue section – build sequence and position map
+    // ----------------------------------------------------------------------
 
     /**
      * Called when entering the {@code residueSection} rule.
@@ -95,10 +89,8 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
      */
     @Override
     public void enterResidueSection(McAnnotateGrammarParser.ResidueSectionContext ctx) {
-        this.sequence = "";
-        this.lastResidueNumber = -1;
-        this.currentZeroBased = 0;
-        this.positionMap.clear();
+        sequenceBuilder.setLength(0);
+        positionMap.clear();
         logger.debug("Entering residue section");
     }
 
@@ -110,8 +102,8 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
      */
     @Override
     public void exitResidueSection(McAnnotateGrammarParser.ResidueSectionContext ctx) {
-        this.structureBuilder.setSequence(sequence);
-        logger.info("Reconstructed sequence of length {} bp", sequence.length());
+        structureBuilder.setSequence(sequenceBuilder.toString());
+        logger.info("Reconstructed sequence of length {}", sequenceBuilder.length());
     }
 
     /**
@@ -128,46 +120,49 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     public void enterResidueLine(McAnnotateGrammarParser.ResidueLineContext ctx) {
         String residueId = ctx.IDENTIFIER(0).getText(); // e.g., "A1"
         String nucleotideToken = ctx.IDENTIFIER(1).getText(); // e.g., "A" or "ADE"
-        String nucleotide;
+        String nucleotide = normalizeNucleotide(nucleotideToken);
 
-        if (nucleotideToken.length() > 1) {
-            nucleotide = "N";
-            logger.warn(
-                "Nucleotide token '{}' has length >1 – truncating to (Uncommon residue) '{}'",
-                nucleotideToken,
-                nucleotide
-            );
-        } else {
-            nucleotide = nucleotideToken;
-        }
-
-        this.sequence += nucleotide;
+        sequenceBuilder.append(nucleotide);
 
         // Extract original residue number (e.g., "A1" → 1)
-        int originalNumber;
-        try {
-            originalNumber = Integer.parseInt(residueId.substring(1));
-        } catch (NumberFormatException e) {
-            logger.warn("Failed to parse residue number from '{}'", residueId, e);
-            originalNumber = -1;
-        }
+        int originalNumber = parseResidueNumber(residueId);
 
         if (originalNumber > 0) {
-            // Detect jumps in residue numbers
-            if (lastResidueNumber != -1 && originalNumber != lastResidueNumber + 1) {
-                logger.warn(
-                    "Residue number jump: previous {} → current {} (possible missing residues)",
-                    lastResidueNumber,
-                    originalNumber
-                );
-            }
-            lastResidueNumber = originalNumber;
+            int index = sequenceBuilder.length() - 1;
+            positionMap.put(originalNumber, index);
+            logger.trace("Mapped {} → index {}", originalNumber, index);
+        } else {
+            logger.warn("Could not parse residue number from '{}'", residueId);
         }
-
-        positionMap.put(originalNumber, currentZeroBased);
-        currentZeroBased++;
-        logger.trace("Mapped residue {} → zero‑based index {}", originalNumber, positionMap.get(originalNumber));
     }
+
+    private String normalizeNucleotide(String token) {
+        if (token == null || token.isEmpty()) {
+            return "N";
+        }
+        if (token.length() == 1) {
+            return token;
+        }
+        logger.debug("Unknown nucleotide token '{}' → 'N'", token);
+        return "N";
+    }
+
+    private int parseResidueNumber(String residueId) {
+        if (residueId == null || residueId.length() < 2) {
+            logger.warn("Invalid residue identifier: '{}'", residueId);
+            return -1;
+        }
+        try {
+            return Integer.parseInt(residueId.substring(1));
+        } catch (NumberFormatException e) {
+            logger.warn("Failed to parse residue number from '{}'", residueId);
+            return -1;
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // Stacking and base-pair lines – build pairs
+    // ----------------------------------------------------------------------
 
     /**
      * Called when entering a {@code nonAdjacentLine} rule.
@@ -178,8 +173,8 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     @Override
     public void enterNonAdjacentLine(McAnnotateGrammarParser.NonAdjacentLineContext ctx) {
         String pairId = ctx.PAIR_ID().getText();
-        logger.debug("Found stacking line: {}", pairId);
-        this.structureBuilder.addPair(buildPair(pairId, BondType.fromString("stacking")));
+        Pair p = buildPair(pairId, BondType.STACKING);
+        structureBuilder.addPair(p);
     }
 
     /**
@@ -192,8 +187,8 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     public void enterBasePairLine(McAnnotateGrammarParser.BasePairLineContext ctx) {
         String pairId = ctx.PAIR_ID().getText();
         BondType bondType = getBondType(ctx.ORIENTATION(), ctx.BOND().getFirst().getText());
-        logger.debug("Base pair line: {} → type {}", pairId, bondType);
-        this.structureBuilder.addPair(buildPair(pairId, bondType));
+        Pair p = buildPair(pairId, bondType);
+        structureBuilder.addPair(p);
     }
 
     /**
@@ -208,22 +203,24 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
      */
     private BondType getBondType(TerminalNode orientation, String bond) {
         if (orientation == null || orientation.getText().isEmpty()) {
-            logger.warn("Missing orientation for bond '{}' – setting to UNKNOWN", bond);
+            logger.warn("Missing orientation for bond '{}' –> UNKNOWN", bond);
             return BondType.UNKNOWN;
         }
 
-        String o = orientation.getText().equals("cis") ? "c" : "t";
+        String prefix = orientation.getText().equals("cis") ? "c" : "t";
 
-        String[] edges = bond.split("/");
-        if (edges.length != 2) {
-            logger.warn("Malformed bond string '{}' – expected format X/Y", bond);
+        String cleanBond = bond.split("\\s+")[0];
+        String[] edges = cleanBond.split("/");
+
+        if (edges.length < 2) {
+            logger.warn("Malformed bond string '{}' – UNKNOWN", bond);
             return BondType.UNKNOWN;
         }
 
-        String edge1 = edges[0].substring(0, 1);
-        String edge2 = edges[1].substring(0, 1);
+        String edge1 = edges[0].isEmpty() ? "?" : edges[0].substring(0, 1);
+        String edge2 = edges[1].isEmpty() ? "?" : edges[1].substring(0, 1);
 
-        return BondType.fromString(o + edge1 + edge2);
+        return BondType.fromString(prefix + edge1 + edge2);
     }
 
     /**
@@ -240,20 +237,14 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
      * @return a new {@code Pair} with resolved positions and nucleotides
      */
     private Pair buildPair(String pos, BondType bondType) {
-        String[] positions = pos.split("-");
-        if (positions.length != 2) {
+        String[] parts = pos.split("-");
+        if (parts.length != 2) {
             logger.warn("Invalid pair identifier '{}' – cannot build pair", pos);
             return null;
         }
 
-        int orig1, orig2;
-        try {
-            orig1 = Integer.parseInt(positions[0].substring(1));
-            orig2 = Integer.parseInt(positions[1].substring(1));
-        } catch (NumberFormatException e) {
-            logger.warn("Failed to parse residue numbers from '{}'", pos, e);
-            return null;
-        }
+        int orig1 = parseResidueNumber(parts[0]);
+        int orig2 = parseResidueNumber(parts[1]);
 
         Integer zero1 = positionMap.get(orig1);
         Integer zero2 = positionMap.get(orig2);
@@ -262,10 +253,16 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
             return null;
         }
 
-        String nt1 = String.valueOf(sequence.charAt(zero1));
-        String nt2 = String.valueOf(sequence.charAt(zero2));
+        String seq = sequenceBuilder.toString();
+        if (zero1 >= seq.length() || zero2 >= seq.length()) {
+            logger.warn("Index out of bounds: {} or {} (seq length {})", zero1, zero2, seq.length());
+            return null;
+        }
 
-        logger.trace("Built pair: {}‑{} ({}‑{}) type {}", zero1, zero2, nt1, nt2, bondType);
+        String nt1 = String.valueOf(seq.charAt(zero1));
+        String nt2 = String.valueOf(seq.charAt(zero2));
+
+        logger.trace("Built pair: {}-{} ({}-{}) type {}", zero1, zero2, nt1, nt2, bondType);
         return new Pair(zero1, zero2, nt1, nt2, bondType);
     }
 }
