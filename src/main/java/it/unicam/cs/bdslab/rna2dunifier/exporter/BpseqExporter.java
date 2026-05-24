@@ -4,8 +4,12 @@ import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Exporter for converting an {@link ExtendedRNASecondaryStructure} into bpseq format.
@@ -23,11 +27,9 @@ import java.util.List;
  */
 public class BpseqExporter {
 
-    private static final String HEADER = "Index\tNucleotide\t"
-            + String.join("\t", BondType.getLeontisWesthofFamily().stream()
-            .map(BondType::getInfo)
-            .toList()
-    );
+    private static final String HEADER =
+        "Index\tNucleotide\t" +
+        String.join("\t", BondType.getLeontisWesthofFamily().stream().map(BondType::getInfo).toList());
 
     /**
      * Exports an RNA secondary structure to canonical bpseq format.
@@ -43,16 +45,16 @@ public class BpseqExporter {
         String seq = this.getSequence(structure);
 
         for (int i = 0; i < seq.length(); i++) {
-
             Pair pair = findPair(i, pairs);
 
-            if(pair == null) {
-                continue;
-            }
+            if (pair == null) continue;
 
-            sb.append(i+1).append("\t")
-                .append(seq.charAt(i)).append("\t")
-                .append((pair.getPos1() == i ? pair.getPos2() : pair.getPos1())+1).append("\n");
+            sb.append(i + 1)
+                .append("\t")
+                .append(seq.charAt(i))
+                .append("\t")
+                .append((pair.getPos1() == i ? pair.getPos2() : pair.getPos1()) + 1)
+                .append("\n");
         }
         return sb.toString();
     }
@@ -80,25 +82,28 @@ public class BpseqExporter {
         result.append("\n");
 
         String seq = this.getSequence(structure);
+        Map<BondType, Map<Integer, List<Integer>>> partnerMap = this.buildPartnerMap(structure);
 
         for (int i = 0; i < seq.length(); i++) {
             char nucleotide = seq.charAt(i);
-            result.append(i + 1).append("\t").append(nucleotide).append("\t");
+            result
+                .append(i + 1)
+                .append("\t")
+                .append(nucleotide)
+                .append("\t");
+                
             for (BondType type : BondType.getLeontisWesthofFamily()) {
-                int finalI = i;
-                List<Integer> matches = structure.getPairs().stream()
-                        .filter(pair ->
-                                // Filter pairs that match the current bond type and involve the current nucleotide position
-                                pair.getType() == type &&
-                                        (pair.getPos1() == finalI
-                                                || pair.getPos2() == finalI)
-                        )
-                        .map(p -> (p.getPos1() == finalI ? p.getPos2() : p.getPos1()) + 1)
-                        .toList();
-                if (matches.isEmpty()) {
-                    result.append("0").append("\t");
+                Map<Integer, List<Integer>> posMap = partnerMap.get(type);
+                List<Integer> partners = posMap != null ? posMap.get(i) : null;
+
+                if(partners == null || partners.isEmpty()) {
+                    result.append("0\t");
                 } else {
-                    result.append(matches.stream().map(String::valueOf).reduce((a, b) -> a + "," + b).orElse("0")).append("\t");
+                    // Convert index from 0-based to 1-based
+                    String partnerStr = partners.stream()
+                        .map(p -> String.valueOf(p + 1))
+                        .collect(Collectors.joining(","));
+                    result.append(partnerStr).append("\t");
                 }
             }
             result.append("\n");
@@ -107,15 +112,15 @@ public class BpseqExporter {
     }
 
     private Pair findPair(int pos, List<Pair> pairs) {
-        return pairs.stream()
-                .filter(pair -> pair.getPos1() == pos || pair.getPos2() == pos)
-                .findFirst()
-                .orElse(null);
+        return pairs
+            .stream()
+            .filter(pair -> pair.getPos1() == pos || pair.getPos2() == pos)
+            .findFirst()
+            .orElse(null);
     }
 
     private String getSequence(ExtendedRNASecondaryStructure structure) {
-
-        if(structure.getSequence() != null && !structure.getSequence().isEmpty()) {
+        if (structure.getSequence() != null && !structure.getSequence().isEmpty()) {
             return structure.getSequence();
         }
 
@@ -124,25 +129,43 @@ public class BpseqExporter {
             maxPos = Math.max(maxPos, Math.max(pair.getPos1(), pair.getPos2()));
         }
 
-        if(maxPos == -1) {
+        if (maxPos == -1) {
             return "";
         }
 
-        char[] seq = new char[maxPos+1];
+        char[] seq = new char[maxPos + 1];
         Arrays.fill(seq, 'N');
 
         for (Pair pair : structure.getPairs()) {
             String nuc1 = pair.getNucleotide1();
-            if(nuc1 != null && !nuc1.isEmpty()) {
+            if (nuc1 != null && !nuc1.isEmpty()) {
                 seq[pair.getPos1()] = nuc1.charAt(0);
             }
 
             String nuc2 = pair.getNucleotide2();
-            if(nuc2 != null && !nuc2.isEmpty()) {
+            if (nuc2 != null && !nuc2.isEmpty()) {
                 seq[pair.getPos2()] = nuc2.charAt(0);
             }
         }
 
         return new String(seq);
+    }
+
+    private Map<BondType, Map<Integer, List<Integer>>> buildPartnerMap(ExtendedRNASecondaryStructure structure) {
+        Map<BondType, Map<Integer, List<Integer>>> map = new HashMap<>();
+
+        for(BondType type : BondType.getLeontisWesthofFamily()) {
+            map.put(type, new HashMap<>());
+        }
+
+        for(Pair pair : structure.getPairs()) {
+            BondType type = pair.getType();
+            Map<Integer, List<Integer>> typeMap = map.get(type);
+            if(typeMap == null) continue;
+            typeMap.computeIfAbsent(pair.getPos1(), pos -> new ArrayList<>()).add(pair.getPos2());
+            typeMap.computeIfAbsent(pair.getPos2(), pos -> new ArrayList<>()).add(pair.getPos1());
+        }
+        
+        return map;
     }
 }
