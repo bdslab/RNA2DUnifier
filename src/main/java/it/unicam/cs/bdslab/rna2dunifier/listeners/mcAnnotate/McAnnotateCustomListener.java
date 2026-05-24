@@ -62,7 +62,7 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     @Override
     public void enterMcAnnotateFile(McAnnotateGrammarParser.McAnnotateFileContext ctx) {
         this.structureBuilder = new ExtendedRNASecondaryStructure.Builder();
-        logger.debug("Started parsing mc‑annotate file");
+        if (logger.isDebugEnabled()) logger.debug("Started parsing mc‑annotate file");
     }
 
     /**
@@ -91,7 +91,7 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     public void enterResidueSection(McAnnotateGrammarParser.ResidueSectionContext ctx) {
         sequenceBuilder.setLength(0);
         positionMap.clear();
-        logger.debug("Entering residue section");
+        if (logger.isDebugEnabled()) logger.debug("Entering residue section");
     }
 
     /**
@@ -130,7 +130,7 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
         if (originalNumber > 0) {
             int index = sequenceBuilder.length() - 1;
             positionMap.put(originalNumber, index);
-            logger.trace("Mapped {} → index {}", originalNumber, index);
+            if (logger.isTraceEnabled()) logger.trace("Mapped {} → index {}", originalNumber, index);
         } else {
             logger.warn("Could not parse residue number from '{}'", residueId);
         }
@@ -143,7 +143,7 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
         if (token.length() == 1) {
             return token;
         }
-        logger.debug("Unknown nucleotide token '{}' → 'N'", token);
+        if (logger.isDebugEnabled()) logger.debug("Unknown nucleotide token '{}' → 'N'", token);
         return "N";
     }
 
@@ -262,7 +262,14 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
         String nt1 = String.valueOf(seq.charAt(zero1));
         String nt2 = String.valueOf(seq.charAt(zero2));
 
-        logger.trace("Built pair: {}-{} ({}-{}) type {}", zero1, zero2, nt1, nt2, bondType);
+        if (logger.isTraceEnabled()) logger.trace(
+            "Built pair: {}-{} ({}-{}) type {}",
+            zero1,
+            zero2,
+            nt1,
+            nt2,
+            bondType
+        );
         return new Pair(zero1, zero2, nt1, nt2, bondType);
     }
 }

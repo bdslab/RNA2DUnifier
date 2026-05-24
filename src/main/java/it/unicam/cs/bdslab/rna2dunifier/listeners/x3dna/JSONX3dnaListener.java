@@ -73,7 +73,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
     public void enterJson(JSONParser.JsonContext ctx) {
         structureBuilder = new ExtendedRNASecondaryStructure.Builder();
         residueParser = new ResidueParser(positionMap);
-        logger.debug("Started parsing x3dna JSON file");
+        if (logger.isDebugEnabled()) logger.debug("Started parsing x3dna JSON file");
     }
 
     /**
@@ -172,7 +172,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
     public void exitMember(JSONParser.MemberContext ctx) {
         depth--;
         String key = stripQuotes(ctx.STRING().getText());
-        logger.debug("Exited pairs");
+        if (logger.isDebugEnabled()) logger.debug("Exited pairs");
         if (key.equals("pairs")) {
             inPairs = false;
         }
@@ -211,7 +211,7 @@ public class JSONX3dnaListener extends JSONBaseListener {
         for (int i = 0; i < sorted.size(); i++) {
             positionMap.put(sorted.get(i), i);
         }
-        logger.debug("Position map built with {} entries", positionMap.size());
+        if (logger.isDebugEnabled()) logger.debug("Position map built with {} entries", positionMap.size());
     }
 
     // ----------------------------------------------------------------------

@@ -61,7 +61,7 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
     @Override
     public void enterStrandSection(RNApolisGrammarParser.StrandSectionContext ctx) {
         this.currentStructureBuilder = new ExtendedRNASecondaryStructure.Builder();
-        logger.debug("Starting new strand section");
+        if (logger.isDebugEnabled()) logger.debug("Starting new strand section");
     }
 
     /**
@@ -92,7 +92,7 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
     public void enterHeader(RNApolisGrammarParser.HeaderContext ctx) {
         String header = ctx.HEADER_STRING().getText().substring(1);
         this.currentStructureBuilder.addHeaderInfo("strand_name", header);
-        logger.debug("Header: {}", header);
+        if (logger.isDebugEnabled()) logger.debug("Header: {}", header);
     }
 
     /**
@@ -105,7 +105,7 @@ public class RNApolisCustomListener extends RNApolisGrammarBaseListener {
     public void enterSequence(RNApolisGrammarParser.SequenceContext ctx) {
         this.currentSequence = ctx.NUCLEOTIDE_SEQUENCE().getText();
         this.currentStructureBuilder.setSequence(this.currentSequence);
-        logger.debug("Sequence length: {}", this.currentSequence.length());
+        if (logger.isDebugEnabled()) logger.debug("Sequence length: {}", this.currentSequence.length());
     }
 
     /**

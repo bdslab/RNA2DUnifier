@@ -59,7 +59,7 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
     @Override
     public void enterRnaviewFile(RNAviewGrammarParser.RnaviewFileContext ctx) {
         this.structureBuilder = new ExtendedRNASecondaryStructure.Builder();
-        logger.debug("Starting to parse RNAview file");
+        if (logger.isDebugEnabled()) logger.debug("Starting to parse RNAview file");
     }
 
     /**
@@ -95,7 +95,10 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
         String positionsString = ctx.ASSIGNED_NUMBERS().getText().replaceAll(",", "");
         String[] posParts = positionsString.split("_");
         if (posParts.length != 2) {
-            logger.warn("Unexpected ASSIGNED_NUMBERS format: '{}' – expected two numbers separated by '_'", positionsString);
+            logger.warn(
+                "Unexpected ASSIGNED_NUMBERS format: '{}' – expected two numbers separated by '_'",
+                positionsString
+            );
             pairBuilder = null;
             return;
         }
@@ -118,8 +121,7 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
             pairBuilder = null;
             return;
         }
-        pairBuilder.setNucleotide1(normalizeResidue(bases[0]))
-                .setNucleotide2(normalizeResidue(bases[1]));
+        pairBuilder.setNucleotide1(normalizeResidue(bases[0])).setNucleotide2(normalizeResidue(bases[1]));
 
         if (logger.isDebugEnabled()) {
             logger.debug("Base pair line: {}–{} ({}‑{})", positionsString, basePair, bases[0], bases[1]);
@@ -163,7 +165,7 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
         }
         if (ctx.STACKED() != null) {
             pairBuilder.setType(BondType.STACKING);
-            logger.trace("Annotation: stacking interaction");
+            if (logger.isTraceEnabled()) logger.trace("Annotation: stacking interaction");
         } else {
             String edgePair = ctx.EDGE_PAIR().getText();
             String orientation = ctx.ORIENTATION().getText();

@@ -65,7 +65,7 @@ public class JSONFr3dListener extends JSONBaseListener {
     @Override
     public void enterJson(JSONParser.JsonContext ctx) {
         this.structureBuilder = new ExtendedRNASecondaryStructure.Builder();
-        logger.debug("Started parsing FR3D JSON file");
+        if (logger.isDebugEnabled()) logger.debug("Started parsing FR3D JSON file");
     }
 
     /**
@@ -269,7 +269,7 @@ public class JSONFr3dListener extends JSONBaseListener {
         for (int i = 0; i < sorted.size(); i++) {
             positionMap.put(sorted.get(i), i);
         }
-        logger.debug("Built position map with {} entries", positionMap.size());
+        if (logger.isDebugEnabled()) logger.debug("Built position map with {} entries", positionMap.size());
     }
 
     // ----------------------------------------------------------------------

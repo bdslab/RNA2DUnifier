@@ -82,7 +82,7 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
     @Override
     public void enterBpnetFile(BpnetGrammarParser.BpnetFileContext ctx) {
         structureBuilder = new ExtendedRNASecondaryStructure.Builder();
-        logger.debug("Started parsing bpnet file");
+        if (logger.isDebugEnabled()) logger.debug("Started parsing bpnet file");
     }
 
     /**
@@ -112,7 +112,7 @@ public class BpnetParserCustomListener extends BpnetGrammarBaseListener {
         currentNucleotide = currentNucleotideRaw.length() > 1 ? "N" : currentNucleotideRaw;
 
         sequence.append(currentNucleotide);
-        logger.trace("Added residue {}: {}", currentPosition, currentNucleotide);
+        if (logger.isTraceEnabled()) logger.trace("Added residue {}: {}", currentPosition, currentNucleotide);
     }
 
     /**
