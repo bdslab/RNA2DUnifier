@@ -1,12 +1,40 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>it.unicam.cs.bdslab</groupId>
     <artifactId>rna2d-unifier</artifactId>
     <version>0.0.1</version>
+
+    <name>RNA 2D Unifier</name>
+    <description>A tool for unifying RNA 2D structures</description>
+    <url>https://github.com/bdslab/RNA2DUnifier</url>
+
+    <licenses>
+        <license>
+            <name>...</name>
+            <url>...</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Francesco Palozzi</name>
+            <email>francesco.palozzi@studenti.unicam.it</email>
+            <organization>unicam</organization>
+            <organizationUrl>https://www.unicam.it</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>https://github.com/bdslab/RNA2DUnifier.git</connection>
+        <developerConnection>https://github.com/bdslab/RNA2DUnifier.git</developerConnection>
+        <url>https://github.com/bdslab/RNA2DUnifier/tree/main</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
