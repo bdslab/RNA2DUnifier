@@ -1,16 +1,31 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.parser.impl;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import java.io.InputStream;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.io.InputStream;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link RnapolisParser}.
@@ -44,13 +59,17 @@ class RnapolisParserTest {
      * @return the input stream
      */
     private InputStream resource(String resourceName) {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/rnapolis/" + resourceName);
+        InputStream is = getClass()
+            .getClassLoader()
+            .getResourceAsStream("rna-output/rnapolis/" + resourceName);
         assertNotNull(is, "Test resource not found: " + resourceName);
         return is;
     }
 
     private InputStream resourceTest(String resourceName) {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("test/rnapolis/" + resourceName);
+        InputStream is = getClass()
+            .getClassLoader()
+            .getResourceAsStream("test/rnapolis/" + resourceName);
         assertNotNull(is, "Test resource not found: " + resourceName);
         return is;
     }
@@ -59,8 +78,11 @@ class RnapolisParserTest {
      * Checks whether the pair list contains a pair with the given positions (1-based).
      */
     private boolean containsPair(List<Pair> pairs, int left, int right) {
-        return pairs.stream().anyMatch(p -> (p.getPos1() == left && p.getPos2() == right) ||
-                (p.getPos2() == left && p.getPos1() == right));
+        return pairs
+            .stream()
+            .anyMatch(
+                p -> (p.getPos1() == left && p.getPos2() == right) || (p.getPos2() == left && p.getPos1() == right)
+            );
     }
 
     // =========================================================================
@@ -292,8 +314,7 @@ class RnapolisParserTest {
     @DisplayName("4PLX_A – sequence is correct")
     void test4PLX_A_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.3db"));
-        assertEquals("GGAAGGUUUUUCUUUUCCUGAGGCGAAAGUCUCAGGUUUUGCUUUUUGGCCUUUCUUAAAAAAAAAAAAAGCAAAA",
-                s.getSequence());
+        assertEquals("GGAAGGUUUUUCUUUUCCUGAGGCGAAAGUCUCAGGUUUUGCUUUUUGGCCUUUCUUAAAAAAAAAAAAAGCAAAA", s.getSequence());
     }
 
     @Test
@@ -382,8 +403,7 @@ class RnapolisParserTest {
     @DisplayName("4PLX_B – sequence is correct")
     void test4PLX_B_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_B.3db"));
-        assertEquals("GGAAGGUUUUUCUUUUCCUGAGGCGAAAGUCUCAGGUUUUGCUUUUUGGCCUUUCAAAAAAAAAAAAGCAAAA",
-                s.getSequence());
+        assertEquals("GGAAGGUUUUUCUUUUCCUGAGGCGAAAGUCUCAGGUUUUGCUUUUUGGCCUUUCAAAAAAAAAAAAGCAAAA", s.getSequence());
     }
 
     @Test
@@ -454,8 +474,7 @@ class RnapolisParserTest {
     @DisplayName("4PLX_C – sequence is correct")
     void test4PLX_C_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_C.3db"));
-        assertEquals("GGAAGGUUUUUCUUUUCCUGAGGCGAAAGUCUCAGGUUUUGCUUUUUGGCCUUUAAAAAAAAAAAGCAAAA",
-                s.getSequence());
+        assertEquals("GGAAGGUUUUUCUUUUCCUGAGGCGAAAGUCUCAGGUUUUGCUUUUUGGCCUUUAAAAAAAAAAAGCAAAA", s.getSequence());
     }
 
     @Test
@@ -549,23 +568,23 @@ class RnapolisParserTest {
         ExtendedRNASecondaryStructure s = parser.parse(resourceTest("rnapolis_complete.3db"));
         assertEquals("UUUUUCUUUUCGAAAAAAAGCAAAA", s.getSequence());
         assertEquals(1, s.getCanonical().size());
-        assertTrue(containsPair(s.getPairs(),0,14));
-        assertTrue(containsPair(s.getPairs(),2,16));
-        assertTrue(containsPair(s.getPairs(),3,17));
+        assertTrue(containsPair(s.getPairs(), 0, 14));
+        assertTrue(containsPair(s.getPairs(), 2, 16));
+        assertTrue(containsPair(s.getPairs(), 3, 17));
     }
 
     @Test
     @DisplayName("All bond types in .3db files are recognized (no UNKNOWN)")
     void testNoUnknownBondTypes() throws Exception {
-        String[] files = {
-                "1YMO_A.3db", "2K95_A.3db", "2M8K_A.3db",
-                "4PLX_A.3db", "4PLX_B.3db", "4PLX_C.3db"
-        };
+        String[] files = { "1YMO_A.3db", "2K95_A.3db", "2M8K_A.3db", "4PLX_A.3db", "4PLX_B.3db", "4PLX_C.3db" };
         for (String file : files) {
             ExtendedRNASecondaryStructure struct = parser.parse(resource(file));
             for (Pair p : struct.getPairs()) {
-                assertNotEquals(BondType.UNKNOWN, p.getType(),
-                        "File " + file + " contains pair with UNKNOWN type: " + p);
+                assertNotEquals(
+                    BondType.UNKNOWN,
+                    p.getType(),
+                    "File " + file + " contains pair with UNKNOWN type: " + p
+                );
             }
         }
     }

@@ -1,7 +1,22 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.parser;
 
 import it.unicam.cs.bdslab.rna2dunifier.parser.impl.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -71,25 +86,25 @@ public class ParserFactory {
 
         String preview = new String(buf, StandardCharsets.UTF_8);
 
-        if (preview.contains("BEGIN_base-pair"))          return ToolType.RNAVIEW;
-        if (preview.contains("Residue conformations"))    return ToolType.MCANNOTATE;
-        if (preview.contains(">") && preview.contains("seq "))
-            return ToolType.RNAPOLIS;
+        if (preview.contains("BEGIN_base-pair")) return ToolType.RNAVIEW;
+        if (preview.contains("Residue conformations")) return ToolType.MCANNOTATE;
+        if (preview.contains(">") && preview.contains("seq ")) return ToolType.RNAPOLIS;
 
         // JSON formats: distinguish by dominant key
         if (preview.trim().startsWith("{") || preview.trim().startsWith("[")) {
-            if (preview.contains("\"annotations\""))      return ToolType.FR3D;
-            if (preview.contains("\"pairs\""))            return ToolType.X3DNA;
+            if (preview.contains("\"annotations\"")) return ToolType.FR3D;
+            if (preview.contains("\"pairs\"")) return ToolType.X3DNA;
         }
 
         // Barnaba: NUCLEOTIDE_INT_INT pairs + WWc/WCc-style annotation
-        if (preview.matches("(?s).*[ACGUacgu]_\\d+_\\d+\\s+[ACGUacgu]_\\d+_\\d+\\s+[GUWCHS]{2}[ct].*"))
-            return ToolType.BARNABA;
+        if (
+            preview.matches("(?s).*[ACGUacgu]_\\d+_\\d+\\s+[ACGUacgu]_\\d+_\\d+\\s+[GUWCHS]{2}[ct].*")
+        ) return ToolType.BARNABA;
 
         // Bpnet: lines with '?' separator and W:W bond notation
-        if (preview.contains("?") &&
-                preview.matches("(?s).*\\d+\\s+\\d+\\s+\\w+\\s+\\?.*[WSHE]:[WSHE][CT].*"))
-            return ToolType.BPNET;
+        if (
+            preview.contains("?") && preview.matches("(?s).*\\d+\\s+\\d+\\s+\\w+\\s+\\?.*[WSHE]:[WSHE][CT].*")
+        ) return ToolType.BPNET;
 
         throw new IllegalArgumentException("Unable to detect the tool type from the provided input.");
     }

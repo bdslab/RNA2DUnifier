@@ -1,4 +1,22 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.exporter;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
@@ -6,9 +24,6 @@ import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for {@link BpseqExporter}.
@@ -30,9 +45,7 @@ class BpseqExporterTest {
     @Test
     @DisplayName("canonical BPSEQ: empty structure produce empty string")
     void canonicalEmptyStructure() {
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("")
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().setSequence("").build();
         String result = exporter.printCanonicalBPSEQ(s);
         assertTrue(result.isEmpty());
     }
@@ -43,9 +56,9 @@ class BpseqExporterTest {
         // pos 0 (G) - pos 5 (C), cWW => indici 1-based: 1 e 6
         Pair p = new Pair(0, 5, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GAAAAC")
-                .addPair(p)
-                .build();
+            .setSequence("GAAAAC")
+            .addPair(p)
+            .build();
 
         String result = exporter.printCanonicalBPSEQ(s);
         String[] lines = result.strip().split("\n");
@@ -71,13 +84,12 @@ class BpseqExporterTest {
     void canonicalIgnoresNonCanonicalPairs() {
         Pair nonCanonical = new Pair(0, 5, "G", "A", BondType.LEONTIS_WESTHOF_cWH);
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GAAAAA")
-                .addPair(nonCanonical)
-                .build();
+            .setSequence("GAAAAA")
+            .addPair(nonCanonical)
+            .build();
 
         String result = exporter.printCanonicalBPSEQ(s);
-        assertTrue(result.isEmpty(),
-                "Non-canonical pairs should not appear in the canonical BPSEQ");
+        assertTrue(result.isEmpty(), "Non-canonical pairs should not appear in the canonical BPSEQ");
     }
 
     @Test
@@ -87,13 +99,16 @@ class BpseqExporterTest {
         Pair p2 = new Pair(1, 4, "A", "U", BondType.LEONTIS_WESTHOF_cWW);
 
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GAAACG")  // lunghezza 6
-                .addPair(p1)
-                .addPair(p2)
-                .build();
+            .setSequence("GAAACG") // lunghezza 6
+            .addPair(p1)
+            .addPair(p2)
+            .build();
 
         String result = exporter.printCanonicalBPSEQ(s);
-        long lineCount = result.lines().filter(l -> !l.isBlank()).count();
+        long lineCount = result
+            .lines()
+            .filter(l -> !l.isBlank())
+            .count();
         assertEquals(4, lineCount);
     }
 
@@ -104,14 +119,12 @@ class BpseqExporterTest {
     @Test
     @DisplayName("extended BPSEQ: the first row is the header with the 12 bond types LW")
     void extendedBpseqHeader() {
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("A")
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().setSequence("A").build();
 
         String result = exporter.printExtendedBPSEQ(s);
         String header = result.lines().findFirst().orElse("");
 
-        assertTrue(header.contains("Index"),      "Header should contain 'Index'");
+        assertTrue(header.contains("Index"), "Header should contain 'Index'");
         assertTrue(header.contains("Nucleotide"), "Header should contain 'Nucleotide'");
         // Verifica almeno alcuni tipi LW nell'intestazione
         assertTrue(header.contains("cWW"), "Header should contain cWW");
@@ -121,38 +134,45 @@ class BpseqExporterTest {
     @Test
     @DisplayName("extended BPSEQ: every data row has 2 + 12 = 14 tab-separated column")
     void extendedBpseqColumnCount() {
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GAUC")
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().setSequence("GAUC").build();
 
         String result = exporter.printExtendedBPSEQ(s);
         // La prima riga è l'intestazione; le successive sono dati
-        result.lines()
-                .skip(1)
-                .filter(l -> !l.isBlank())
-                .forEach(line -> {
-                    String[] cols = line.split("\t");
-                    assertEquals(14, cols.length,
-                            "Every data row should have 14 column (Index + Nucleotide + 12 bond types LW): " + line);
-                });
+        result
+            .lines()
+            .skip(1)
+            .filter(l -> !l.isBlank())
+            .forEach(line -> {
+                String[] cols = line.split("\t");
+                assertEquals(
+                    14,
+                    cols.length,
+                    "Every data row should have 14 column (Index + Nucleotide + 12 bond types LW): " + line
+                );
+            });
     }
 
     @Test
     @DisplayName("extended BPSEQ: position without pair has 0 for all LW bond type")
     void extendedBpseqUnpairedPosition() {
         // Nessuna coppia -> tutti 0
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("ACGU")
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().setSequence("ACGU").build();
 
         String result = exporter.printExtendedBPSEQ(s);
-        result.lines().skip(1).filter(l -> !l.isBlank()).forEach(line -> {
-            String[] cols = line.split("\t");
-            for (int i = 2; i < cols.length; i++) {
-                assertEquals("0", cols[i],
-                        "Position without pair should have 0 for all LW bond type, row: " + line);
-            }
-        });
+        result
+            .lines()
+            .skip(1)
+            .filter(l -> !l.isBlank())
+            .forEach(line -> {
+                String[] cols = line.split("\t");
+                for (int i = 2; i < cols.length; i++) {
+                    assertEquals(
+                        "0",
+                        cols[i],
+                        "Position without pair should have 0 for all LW bond type, row: " + line
+                    );
+                }
+            });
     }
 
     @Test
@@ -161,9 +181,9 @@ class BpseqExporterTest {
         // pos 0 (G) appaiata a pos 3 (C) con cWW
         Pair p = new Pair(0, 3, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GAUC")
-                .addPair(p)
-                .build();
+            .setSequence("GAUC")
+            .addPair(p)
+            .build();
 
         String result = exporter.printExtendedBPSEQ(s);
         // La riga della posizione 1 (indice 0) deve avere "4" nella colonna cWW (indice 2)
@@ -179,12 +199,14 @@ class BpseqExporterTest {
     @DisplayName("extended BPSEQ: the number of row data is equal to the length of the sequence")
     void extendedBpseqRowCountMatchesSequenceLength() {
         String seq = "GCAUGCAU";
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence(seq)
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().setSequence(seq).build();
 
         String result = exporter.printExtendedBPSEQ(s);
-        long dataLines = result.lines().skip(1).filter(l -> !l.isBlank()).count();
+        long dataLines = result
+            .lines()
+            .skip(1)
+            .filter(l -> !l.isBlank())
+            .count();
         assertEquals(seq.length(), dataLines);
     }
 
@@ -197,9 +219,7 @@ class BpseqExporterTest {
     void extendedBpseqReconstructSequenceWithN() {
         // Coppia tra pos 0 e pos 2 con nucleotidi noti; pos 1 non è in nessuna coppia
         Pair p = new Pair(0, 2, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .addPair(p)
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().addPair(p).build();
 
         String result = exporter.printExtendedBPSEQ(s);
         // Riga indice 2 (pos 1): nucleotide deve essere N
@@ -220,10 +240,10 @@ class BpseqExporterTest {
         Pair p2 = new Pair(0, 5, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
 
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GAUCUC")
-                .addPair(p1)
-                .addPair(p2)
-                .build();
+            .setSequence("GAUCUC")
+            .addPair(p1)
+            .addPair(p2)
+            .build();
 
         String result = exporter.printExtendedBPSEQ(s);
         String firstDataLine = result.lines().skip(1).findFirst().orElse("");
@@ -231,7 +251,9 @@ class BpseqExporterTest {
 
         // La colonna cWW (indice 2) deve contenere "4,6" o "6,4"
         String cWWCol = cols[2];
-        assertTrue(cWWCol.contains("4") && cWWCol.contains("6") && cWWCol.contains(","),
-                "Two cWW partner should be listed separately by a comma: " + cWWCol);
+        assertTrue(
+            cWWCol.contains("4") && cWWCol.contains("6") && cWWCol.contains(","),
+            "Two cWW partner should be listed separately by a comma: " + cWWCol
+        );
     }
 }

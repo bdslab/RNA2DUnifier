@@ -1,18 +1,33 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.parser.impl;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("McAnnotateParser – mc-annotate output")
 class McAnnotateParserTest {
@@ -25,22 +40,27 @@ class McAnnotateParserTest {
     }
 
     private InputStream resource(String resourceName) {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/mc-annotate/txt/" + resourceName);
+        InputStream is = getClass()
+            .getClassLoader()
+            .getResourceAsStream("rna-output/mc-annotate/txt/" + resourceName);
         assertNotNull(is, "Resource not found: " + resourceName);
         return is;
     }
 
     private boolean containsPair(List<Pair> pairs, int pos1, int pos2) {
-        return pairs.stream().anyMatch(p -> (p.getPos1() == pos1 && p.getPos2() == pos2)
-                || (p.getPos1() == pos2 && p.getPos2() == pos1));
+        return pairs
+            .stream()
+            .anyMatch(
+                p -> (p.getPos1() == pos1 && p.getPos2() == pos2) || (p.getPos1() == pos2 && p.getPos2() == pos1)
+            );
     }
 
     private Pair getPair(List<Pair> pairs, int pos1, int pos2) {
-        return pairs.stream()
-                .filter(p -> (p.getPos1() == pos1 && p.getPos2() == pos2) ||
-                        (p.getPos1() == pos2 && p.getPos2() == pos1))
-                .findFirst()
-                .orElse(null);
+        return pairs
+            .stream()
+            .filter(p -> (p.getPos1() == pos1 && p.getPos2() == pos2) || (p.getPos1() == pos2 && p.getPos2() == pos1))
+            .findFirst()
+            .orElse(null);
     }
 
     // =========================================================================
@@ -66,7 +86,11 @@ class McAnnotateParserTest {
     @DisplayName("1YMO_A – canonical (cWW) count (16)")
     void test1YMO_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A.txt"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(16, cww);
         assertEquals(cww, s.getCanonical().size());
     }
@@ -112,7 +136,11 @@ class McAnnotateParserTest {
     @DisplayName("2K95_A – canonical count (15)")
     void test2K95_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2K95_A.txt"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(15, cww);
     }
 
@@ -120,7 +148,10 @@ class McAnnotateParserTest {
     @DisplayName("2K95_A – tWS pair exists (A98-A172)")
     void test2K95_A_tWS() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2K95_A.txt"));
-        boolean hasTWS = s.getPairs().stream().anyMatch(p -> p.getType() == BondType.LEONTIS_WESTHOF_tWS);
+        boolean hasTWS = s
+            .getPairs()
+            .stream()
+            .anyMatch(p -> p.getType() == BondType.LEONTIS_WESTHOF_tWS);
         assertTrue(hasTWS);
     }
 
@@ -145,7 +176,11 @@ class McAnnotateParserTest {
     @DisplayName("2M8K_A – canonical count (17)")
     void test2M8K_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2M8K_A.txt"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(17, cww);
     }
 
@@ -157,7 +192,7 @@ class McAnnotateParserTest {
     void test4PLX_A_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.txt"));
         assertEquals(76, s.getSequence().length());
-        assertEquals('N', s.getSequence().charAt(0));   // GTP → N
+        assertEquals('N', s.getSequence().charAt(0)); // GTP → N
         assertEquals('N', s.getSequence().charAt(75)); // A23 → N
     }
 
@@ -172,7 +207,11 @@ class McAnnotateParserTest {
     @DisplayName("4PLX_A – canonical count (23)")
     void test4PLX_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.txt"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(23, cww);
     }
 
@@ -197,7 +236,11 @@ class McAnnotateParserTest {
     @DisplayName("4PLX_B – canonical count (22)")
     void test4PLX_B_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_B.txt"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(22, cww);
     }
 
@@ -222,7 +265,11 @@ class McAnnotateParserTest {
     @DisplayName("4PLX_C – canonical count (20)")
     void test4PLX_C_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_C.txt"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(20, cww);
     }
 
@@ -232,10 +279,7 @@ class McAnnotateParserTest {
     @Test
     @DisplayName("All files – no duplicate pairs")
     void testNoDuplicatePairs() throws Exception {
-        String[] files = {
-                "1YMO_A.txt", "2K95_A.txt", "2M8K_A.txt",
-                "4PLX_A.txt", "4PLX_B.txt", "4PLX_C.txt"
-        };
+        String[] files = { "1YMO_A.txt", "2K95_A.txt", "2M8K_A.txt", "4PLX_A.txt", "4PLX_B.txt", "4PLX_C.txt" };
         for (String file : files) {
             ExtendedRNASecondaryStructure s = parser.parse(resource(file));
             Set<String> keys = new HashSet<>();

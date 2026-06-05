@@ -1,3 +1,19 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier;
 
 import it.unicam.cs.bdslab.rna2dunifier.exporter.BpseqExporter;
@@ -5,7 +21,6 @@ import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.parser.ParserFactory;
 import it.unicam.cs.bdslab.rna2dunifier.parser.RnaStructureParser;
 import it.unicam.cs.bdslab.rna2dunifier.parser.ToolType;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.text.ParseException;
@@ -84,7 +99,8 @@ public class RnaUnifier {
      * @throws IOException    if an I/O error occurs while reading the stream
      * @throws ParseException if the input does not conform to the expected format
      */
-    public String process(InputStream inputStream, ToolType toolType, boolean extended) throws IOException, ParseException {
+    public String process(InputStream inputStream, ToolType toolType, boolean extended)
+        throws IOException, ParseException {
         RnaStructureParser parser = ParserFactory.getParser(toolType);
         ExtendedRNASecondaryStructure structure = parser.parse(inputStream);
         return extended ? this.exporter.printExtendedBPSEQ(structure) : this.exporter.printCanonicalBPSEQ(structure);
@@ -118,7 +134,8 @@ public class RnaUnifier {
      * @throws IOException    if an I/O error occurs while reading the input or writing the output
      * @throws ParseException if the input file does not conform to the expected format
      */
-    public void processToFile(File inputFile, ToolType toolType, File outputFile, boolean extended) throws IOException, ParseException {
+    public void processToFile(File inputFile, ToolType toolType, File outputFile, boolean extended)
+        throws IOException, ParseException {
         String bpseq = process(inputFile, toolType, extended);
         Files.write(outputFile.toPath(), bpseq.getBytes());
     }

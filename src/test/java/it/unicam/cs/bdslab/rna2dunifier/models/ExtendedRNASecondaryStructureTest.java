@@ -1,11 +1,26 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.models;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test for {@link ExtendedRNASecondaryStructure}.
@@ -20,9 +35,7 @@ class ExtendedRNASecondaryStructureTest {
     @Test
     @DisplayName("Builder with sequence and without any pair produce empty structure")
     void builderEmptyPairs() {
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("ACGU")
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().setSequence("ACGU").build();
 
         assertEquals("ACGU", s.getSequence());
         assertTrue(s.getPairs().isEmpty());
@@ -35,9 +48,9 @@ class ExtendedRNASecondaryStructureTest {
         Pair p = new Pair(0, 3, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
 
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GAUC")
-                .addPair(p)
-                .build();
+            .setSequence("GAUC")
+            .addPair(p)
+            .build();
 
         assertEquals(1, s.getPairs().size());
         assertTrue(s.getPairs().contains(p));
@@ -53,9 +66,9 @@ class ExtendedRNASecondaryStructureTest {
         Pair canonical = new Pair(0, 5, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
 
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GACCUG")
-                .addPair(canonical)
-                .build();
+            .setSequence("GACCUG")
+            .addPair(canonical)
+            .build();
 
         assertEquals(1, s.getPairs().size());
         assertEquals(1, s.getCanonical().size());
@@ -67,9 +80,7 @@ class ExtendedRNASecondaryStructureTest {
     void tWWIsCanonical() {
         Pair p = new Pair(1, 8, "A", "U", BondType.LEONTIS_WESTHOF_tWW);
 
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .addPair(p)
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().addPair(p).build();
 
         assertEquals(1, s.getCanonical().size());
     }
@@ -79,13 +90,10 @@ class ExtendedRNASecondaryStructureTest {
     void nonCanonicalPairNotInCanonicalList() {
         Pair nonCanonical = new Pair(0, 5, "G", "A", BondType.LEONTIS_WESTHOF_cWH);
 
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .addPair(nonCanonical)
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().addPair(nonCanonical).build();
 
         assertEquals(1, s.getPairs().size());
-        assertTrue(s.getCanonical().isEmpty(),
-                "A pair cWH should not go into the canonical list");
+        assertTrue(s.getCanonical().isEmpty(), "A pair cWH should not go into the canonical list");
     }
 
     @Test
@@ -93,9 +101,7 @@ class ExtendedRNASecondaryStructureTest {
     void stackingNotCanonical() {
         Pair stacking = new Pair(2, 3, "G", "U", BondType.STACKING);
 
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .addPair(stacking)
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().addPair(stacking).build();
 
         assertTrue(s.getCanonical().isEmpty());
     }
@@ -105,13 +111,16 @@ class ExtendedRNASecondaryStructureTest {
     void mixedPairsSeparatedCorrectly() {
         Pair c1 = new Pair(0, 9, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
         Pair c2 = new Pair(1, 8, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
-        Pair nc  = new Pair(3, 6, "A", "G", BondType.LEONTIS_WESTHOF_tHS);
-        Pair st  = new Pair(4, 5, "U", "U", BondType.STACKING);
+        Pair nc = new Pair(3, 6, "A", "G", BondType.LEONTIS_WESTHOF_tHS);
+        Pair st = new Pair(4, 5, "U", "U", BondType.STACKING);
 
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("GGAUCAUCC")
-                .addPair(c1).addPair(c2).addPair(nc).addPair(st)
-                .build();
+            .setSequence("GGAUCAUCC")
+            .addPair(c1)
+            .addPair(c2)
+            .addPair(nc)
+            .addPair(st)
+            .build();
 
         assertEquals(4, s.getPairs().size());
         assertEquals(2, s.getCanonical().size());
@@ -130,14 +139,14 @@ class ExtendedRNASecondaryStructureTest {
     void headerInfoStored() {
         // Non esiste un getter pubblico per headerInfo: verifichiamo tramite toString
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("ACGU")
-                .addHeaderInfo("PDB ID", "1YMO")
-                .addHeaderInfo("Chain ID", "A")
-                .addPair(new Pair(0, 3, "A", "U", BondType.LEONTIS_WESTHOF_cWW))
-                .build();
+            .setSequence("ACGU")
+            .addHeaderInfo("PDB ID", "1YMO")
+            .addHeaderInfo("Chain ID", "A")
+            .addPair(new Pair(0, 3, "A", "U", BondType.LEONTIS_WESTHOF_cWW))
+            .build();
 
         String repr = s.toString();
-        assertTrue(repr.contains("1YMO"),  "toString should contain the PDB ID");
+        assertTrue(repr.contains("1YMO"), "toString should contain the PDB ID");
         assertTrue(repr.contains("Chain ID"), "toString should contain the key Chain ID");
     }
 
@@ -148,9 +157,7 @@ class ExtendedRNASecondaryStructureTest {
     @Test
     @DisplayName("setSequence overwrite the previous sequence")
     void setSequenceOverwrites() {
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setSequence("ACGU")
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().setSequence("ACGU").build();
 
         s.setSequence("GGGG");
         assertEquals("GGGG", s.getSequence());
@@ -166,9 +173,7 @@ class ExtendedRNASecondaryStructureTest {
         Pair p1 = new Pair(0, 5, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
         Pair p2 = new Pair(1, 4, "A", "U", BondType.LEONTIS_WESTHOF_cWW);
 
-        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder()
-                .setPairs(List.of(p1, p2))
-                .build();
+        ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().setPairs(List.of(p1, p2)).build();
 
         assertEquals(2, s.getPairs().size());
     }

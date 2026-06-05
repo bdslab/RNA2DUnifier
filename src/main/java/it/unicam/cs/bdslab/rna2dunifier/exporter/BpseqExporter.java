@@ -1,9 +1,24 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.exporter;
 
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -91,16 +106,17 @@ public class BpseqExporter {
                 .append("\t")
                 .append(nucleotide)
                 .append("\t");
-                
+
             for (BondType type : BondType.getLeontisWesthofFamily()) {
                 Map<Integer, List<Integer>> posMap = partnerMap.get(type);
                 List<Integer> partners = posMap != null ? posMap.get(i) : null;
 
-                if(partners == null || partners.isEmpty()) {
+                if (partners == null || partners.isEmpty()) {
                     result.append("0\t");
                 } else {
                     // Convert index from 0-based to 1-based
-                    String partnerStr = partners.stream()
+                    String partnerStr = partners
+                        .stream()
                         .map(p -> String.valueOf(p + 1))
                         .collect(Collectors.joining(","));
                     result.append(partnerStr).append("\t");
@@ -154,18 +170,18 @@ public class BpseqExporter {
     private Map<BondType, Map<Integer, List<Integer>>> buildPartnerMap(ExtendedRNASecondaryStructure structure) {
         Map<BondType, Map<Integer, List<Integer>>> map = new HashMap<>();
 
-        for(BondType type : BondType.getLeontisWesthofFamily()) {
+        for (BondType type : BondType.getLeontisWesthofFamily()) {
             map.put(type, new HashMap<>());
         }
 
-        for(Pair pair : structure.getPairs()) {
+        for (Pair pair : structure.getPairs()) {
             BondType type = pair.getType();
             Map<Integer, List<Integer>> typeMap = map.get(type);
-            if(typeMap == null) continue;
+            if (typeMap == null) continue;
             typeMap.computeIfAbsent(pair.getPos1(), pos -> new ArrayList<>()).add(pair.getPos2());
             typeMap.computeIfAbsent(pair.getPos2(), pos -> new ArrayList<>()).add(pair.getPos1());
         }
-        
+
         return map;
     }
 }

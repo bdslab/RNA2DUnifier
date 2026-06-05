@@ -1,3 +1,19 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.models;
 
 import java.util.*;
@@ -110,24 +126,18 @@ public class ExtendedRNASecondaryStructure {
 
         // header info
         result.append("Header Info: \n");
-        headerInfo.forEach((key, value) ->
-                result.append(key).append(": ").append(value).append("\n")
-        );
+        headerInfo.forEach((key, value) -> result.append(key).append(": ").append(value).append("\n"));
 
         // sequence
         result.append("Sequence: \n").append(sequence).append("\n");
 
         // canonical pairs
         result.append("Canonical Pairs: \n");
-        canonical.forEach(c ->
-                result.append(c.toString()).append("\n")
-        );
+        canonical.forEach(c -> result.append(c.toString()).append("\n"));
 
         // pairs
         result.append("Pairs: \n");
-        pairs.forEach(p ->
-                result.append(p.toString()).append("\n")
-        );
+        pairs.forEach(p -> result.append(p.toString()).append("\n"));
 
         return result.toString();
     }
@@ -137,6 +147,7 @@ public class ExtendedRNASecondaryStructure {
      * Provides a fluent interface to construct the immutable structure incrementally.
      */
     public static class Builder {
+
         private String sequence = "";
         private List<Pair> pairs = new ArrayList<>();
         private List<Pair> canonical = new ArrayList<>();

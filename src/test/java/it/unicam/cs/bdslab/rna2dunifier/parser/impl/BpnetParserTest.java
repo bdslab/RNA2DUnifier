@@ -1,18 +1,33 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.parser.impl;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
+import java.io.InputStream;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-
-import java.io.InputStream;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("BpnetParser – BPFIND output files")
 class BpnetParserTest {
@@ -25,14 +40,19 @@ class BpnetParserTest {
     }
 
     private InputStream resource(String resourceName) {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/bpnet/" + resourceName);
+        InputStream is = getClass()
+            .getClassLoader()
+            .getResourceAsStream("rna-output/bpnet/" + resourceName);
         assertNotNull(is, "Resource not found: " + resourceName);
         return is;
     }
 
     private boolean containsPair(List<Pair> pairs, int pos1, int pos2) {
-        return pairs.stream().anyMatch(p -> (p.getPos1() == pos1 && p.getPos2() == pos2)
-                || (p.getPos1() == pos2 && p.getPos2() == pos1));
+        return pairs
+            .stream()
+            .anyMatch(
+                p -> (p.getPos1() == pos1 && p.getPos2() == pos2) || (p.getPos1() == pos2 && p.getPos2() == pos1)
+            );
     }
 
     // -------------------------------------------------------------------------
@@ -56,7 +76,11 @@ class BpnetParserTest {
     @DisplayName("1YMO_A – canonical (cWW) count")
     void test1YMO_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A.1YMO_A.out"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(15, cww);
         assertEquals(cww, s.getCanonical().size());
     }
@@ -66,15 +90,30 @@ class BpnetParserTest {
     void test1YMO_A_specificPairs() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A.1YMO_A.out"));
         assertTrue(containsPair(s.getPairs(), 0, 28));
-        Pair p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 0 && pr.getPos2() == 28)).findFirst().get();
+        Pair p = s
+            .getPairs()
+            .stream()
+            .filter(pr -> (pr.getPos1() == 0 && pr.getPos2() == 28))
+            .findFirst()
+            .get();
         assertEquals(BondType.LEONTIS_WESTHOF_cWW, p.getType());
 
         assertTrue(containsPair(s.getPairs(), 4, 34));
-        p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 4 && pr.getPos2() == 34)).findFirst().get();
+        p = s
+            .getPairs()
+            .stream()
+            .filter(pr -> (pr.getPos1() == 4 && pr.getPos2() == 34))
+            .findFirst()
+            .get();
         assertEquals(BondType.LEONTIS_WESTHOF_cHS, p.getType());
 
         assertTrue(containsPair(s.getPairs(), 5, 35));
-        p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 5 && pr.getPos2() == 35)).findFirst().get();
+        p = s
+            .getPairs()
+            .stream()
+            .filter(pr -> (pr.getPos1() == 5 && pr.getPos2() == 35))
+            .findFirst()
+            .get();
         assertNotEquals(BondType.UNKNOWN, p.getType());
     }
 
@@ -99,7 +138,11 @@ class BpnetParserTest {
     @DisplayName("2K95_A – canonical count")
     void test2K95_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2K95_A.2K95_A.out"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(15, cww);
     }
 
@@ -108,7 +151,12 @@ class BpnetParserTest {
     void test2K95_A_cHS() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2K95_A.2K95_A.out"));
         assertTrue(containsPair(s.getPairs(), 4, 34));
-        Pair p = s.getPairs().stream().filter(pr -> (pr.getPos1() == 4 && pr.getPos2() == 34)).findFirst().get();
+        Pair p = s
+            .getPairs()
+            .stream()
+            .filter(pr -> (pr.getPos1() == 4 && pr.getPos2() == 34))
+            .findFirst()
+            .get();
         assertEquals(BondType.LEONTIS_WESTHOF_cHS, p.getType());
     }
 
@@ -133,7 +181,11 @@ class BpnetParserTest {
     @DisplayName("2M8K_A – canonical count")
     void test2M8K_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2M8K_A.2M8K_A.out"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(17, cww);
     }
 
@@ -152,7 +204,7 @@ class BpnetParserTest {
     void test4PLX_A_sequence() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.4PLX_A.out"));
         assertEquals(76, s.getSequence().length());
-        assertEquals('N', s.getSequence().charAt(0));   // GTP -> N
+        assertEquals('N', s.getSequence().charAt(0)); // GTP -> N
         assertEquals('N', s.getSequence().charAt(75)); // A23 -> N
     }
 
@@ -167,7 +219,11 @@ class BpnetParserTest {
     @DisplayName("4PLX_A – canonical count")
     void test4PLX_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A.4PLX_A.out"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(25, cww);
     }
 
@@ -194,7 +250,11 @@ class BpnetParserTest {
     @DisplayName("4PLX_B – canonical count")
     void test4PLX_B_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_B.4PLX_B.out"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(23, cww);
     }
 
@@ -221,25 +281,29 @@ class BpnetParserTest {
     @DisplayName("4PLX_C – canonical count")
     void test4PLX_C_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_C.4PLX_C.out"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(22, cww);
     }
 
     @ParameterizedTest
     @CsvSource({
-            "1YMO_A.1YMO_A.out",
-            "2K95_A.2K95_A.out",
-            "2M8K_A.2M8K_A.out",
-            "4PLX_A.4PLX_A.out",
-            "4PLX_B.4PLX_B.out",
-            "4PLX_C.4PLX_C.out"
+        "1YMO_A.1YMO_A.out",
+        "2K95_A.2K95_A.out",
+        "2M8K_A.2M8K_A.out",
+        "4PLX_A.4PLX_A.out",
+        "4PLX_B.4PLX_B.out",
+        "4PLX_C.4PLX_C.out",
     })
     @DisplayName("No duplicate pairs (unordered)")
     void testNoDuplicatePairs(String resourceName) throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource(resourceName));
         for (Pair p : s.getPairs()) {
             for (Pair p2 : s.getPairs()) {
-                if(p != p2) {
+                if (p != p2) {
                     assertNotEquals(p, p2, "Duplicate pair " + p.toString() + " in " + resourceName);
                 }
             }
@@ -248,30 +312,29 @@ class BpnetParserTest {
 
     @ParameterizedTest
     @CsvSource({
-            "1YMO_A.1YMO_A.out",
-            "2K95_A.2K95_A.out",
-            "2M8K_A.2M8K_A.out",
-            "4PLX_A.4PLX_A.out",
-            "4PLX_B.4PLX_B.out",
-            "4PLX_C.4PLX_C.out"
+        "1YMO_A.1YMO_A.out",
+        "2K95_A.2K95_A.out",
+        "2M8K_A.2M8K_A.out",
+        "4PLX_A.4PLX_A.out",
+        "4PLX_B.4PLX_B.out",
+        "4PLX_C.4PLX_C.out",
     })
     @DisplayName("No UNKNOWN bond type for annotated pairs")
     void testNoUnknownBondTypes(String resourceName) throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource(resourceName));
         for (Pair p : s.getPairs()) {
-            assertNotEquals(BondType.UNKNOWN, p.getType(),
-                    "Pair " + p + " in " + resourceName + " has UNKNOWN type");
+            assertNotEquals(BondType.UNKNOWN, p.getType(), "Pair " + p + " in " + resourceName + " has UNKNOWN type");
         }
     }
 
     @ParameterizedTest
     @CsvSource({
-            "1YMO_A.1YMO_A.out",
-            "2K95_A.2K95_A.out",
-            "2M8K_A.2M8K_A.out",
-            "4PLX_A.4PLX_A.out",
-            "4PLX_B.4PLX_B.out",
-            "4PLX_C.4PLX_C.out"
+        "1YMO_A.1YMO_A.out",
+        "2K95_A.2K95_A.out",
+        "2M8K_A.2M8K_A.out",
+        "4PLX_A.4PLX_A.out",
+        "4PLX_B.4PLX_B.out",
+        "4PLX_C.4PLX_C.out",
     })
     @DisplayName("All bond type annotations are correctly mapped")
     void testAllBondTypesCorrectlyMapped(String resourceName) throws Exception {
@@ -305,17 +368,33 @@ class BpnetParserTest {
                     String annotation = parts[10]; // column 11 in 0‑based indexing
 
                     // Find the corresponding Pair in the parsed structure
-                    Pair pair = struct.getPairs().stream()
-                            .filter(p -> (p.getPos1() == pos1 && p.getPos2() == pos2) ||
-                                    (p.getPos1() == pos2 && p.getPos2() == pos1))
-                            .findFirst()
-                            .orElse(null);
+                    Pair pair = struct
+                        .getPairs()
+                        .stream()
+                        .filter(
+                            p ->
+                                (p.getPos1() == pos1 && p.getPos2() == pos2) ||
+                                (p.getPos1() == pos2 && p.getPos2() == pos1)
+                        )
+                        .findFirst()
+                        .orElse(null);
 
                     if (pair != null) {
                         BondType expected = mapBpfindAnnotationToBondType(annotation);
-                        assertEquals(expected, pair.getType(),
-                                "Annotation " + annotation + " for pair (" + pos1 + "," + pos2 +
-                                        ") mapped to " + pair.getType() + " but expected " + expected);
+                        assertEquals(
+                            expected,
+                            pair.getType(),
+                            "Annotation " +
+                                annotation +
+                                " for pair (" +
+                                pos1 +
+                                "," +
+                                pos2 +
+                                ") mapped to " +
+                                pair.getType() +
+                                " but expected " +
+                                expected
+                        );
                     }
                     // If pair is null, it might be a stacking or tertiary interaction? Skip.
                 } catch (NumberFormatException e) {
@@ -336,20 +415,34 @@ class BpnetParserTest {
 
         // Mapping table based on BPFIND output
         switch (code) {
-            case "W:WC": return BondType.LEONTIS_WESTHOF_cWW;      // Watson-Crick cis
-            case "W:ST": return BondType.LEONTIS_WESTHOF_tWS;      // Watson-Crick trans? Actually "W:ST" is Watson-Crick/Sugar trans -> tWS
-            case "w:sC": return BondType.LEONTIS_WESTHOF_cWS;      // sugar edge cis
-            case "w:sT": return BondType.LEONTIS_WESTHOF_tWS;      // sugar edge trans
-            case "W:HC": return BondType.LEONTIS_WESTHOF_cWH;      // Watson-Crick/Hoogsteen cis
-            case "H:WC": return BondType.LEONTIS_WESTHOF_cWH;      // Hoogsteen/Watson-Crick cis (same family)
-            case "S:HC": return BondType.LEONTIS_WESTHOF_cHS;      // Sugar/Hoogsteen cis -> cHS
-            case "H:SC": return BondType.LEONTIS_WESTHOF_cHS;      // Hoogsteen/Sugar cis -> cHS
-            case "S:WT": return BondType.LEONTIS_WESTHOF_tWS;      // Sugar/Watson-Crick trans -> tWS
-            case "+:HC": return BondType.LEONTIS_WESTHOF_cWH;      // non-standard but cis Watson‑Crick/Hoogsteen
-            case "H:+C": return BondType.LEONTIS_WESTHOF_cWH;      // non-standard but cis Watson Crick/Hoogsteen
-            case "s:sC": return BondType.LEONTIS_WESTHOF_cSS;      // sugar/sugar cis
-            case "s:sT": return BondType.LEONTIS_WESTHOF_tSS;      // sugar/sugar trans
-            case "h:wC": return BondType.LEONTIS_WESTHOF_cWH;      // Hoogsteen/Watson-Crick cis (same as H:WC)
+            case "W:WC":
+                return BondType.LEONTIS_WESTHOF_cWW; // Watson-Crick cis
+            case "W:ST":
+                return BondType.LEONTIS_WESTHOF_tWS; // Watson-Crick trans? Actually "W:ST" is Watson-Crick/Sugar trans -> tWS
+            case "w:sC":
+                return BondType.LEONTIS_WESTHOF_cWS; // sugar edge cis
+            case "w:sT":
+                return BondType.LEONTIS_WESTHOF_tWS; // sugar edge trans
+            case "W:HC":
+                return BondType.LEONTIS_WESTHOF_cWH; // Watson-Crick/Hoogsteen cis
+            case "H:WC":
+                return BondType.LEONTIS_WESTHOF_cWH; // Hoogsteen/Watson-Crick cis (same family)
+            case "S:HC":
+                return BondType.LEONTIS_WESTHOF_cHS; // Sugar/Hoogsteen cis -> cHS
+            case "H:SC":
+                return BondType.LEONTIS_WESTHOF_cHS; // Hoogsteen/Sugar cis -> cHS
+            case "S:WT":
+                return BondType.LEONTIS_WESTHOF_tWS; // Sugar/Watson-Crick trans -> tWS
+            case "+:HC":
+                return BondType.LEONTIS_WESTHOF_cWH; // non-standard but cis Watson‑Crick/Hoogsteen
+            case "H:+C":
+                return BondType.LEONTIS_WESTHOF_cWH; // non-standard but cis Watson Crick/Hoogsteen
+            case "s:sC":
+                return BondType.LEONTIS_WESTHOF_cSS; // sugar/sugar cis
+            case "s:sT":
+                return BondType.LEONTIS_WESTHOF_tSS; // sugar/sugar trans
+            case "h:wC":
+                return BondType.LEONTIS_WESTHOF_cWH; // Hoogsteen/Watson-Crick cis (same as H:WC)
             default:
                 // If code is "W:??" or something else, fallback to UNKNOWN
                 return BondType.UNKNOWN;

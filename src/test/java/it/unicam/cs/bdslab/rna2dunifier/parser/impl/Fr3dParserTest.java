@@ -1,18 +1,33 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.parser.impl;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import it.unicam.cs.bdslab.rna2dunifier.models.BondType;
 import it.unicam.cs.bdslab.rna2dunifier.models.ExtendedRNASecondaryStructure;
 import it.unicam.cs.bdslab.rna2dunifier.models.Pair;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Fr3dParser – FR3D JSON output")
 class Fr3dParserTest {
@@ -25,22 +40,27 @@ class Fr3dParserTest {
     }
 
     private InputStream resource(String resourceName) {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("rna-output/fr3d/" + resourceName);
+        InputStream is = getClass()
+            .getClassLoader()
+            .getResourceAsStream("rna-output/fr3d/" + resourceName);
         assertNotNull(is, "Resource not found: " + resourceName);
         return is;
     }
 
     private boolean containsPair(List<Pair> pairs, int pos1, int pos2) {
-        return pairs.stream().anyMatch(p -> (p.getPos1() == pos1 && p.getPos2() == pos2)
-                || (p.getPos1() == pos2 && p.getPos2() == pos1));
+        return pairs
+            .stream()
+            .anyMatch(
+                p -> (p.getPos1() == pos1 && p.getPos2() == pos2) || (p.getPos1() == pos2 && p.getPos2() == pos1)
+            );
     }
 
     private Pair getPair(List<Pair> pairs, int pos1, int pos2) {
-        return pairs.stream()
-                .filter(p -> (p.getPos1() == pos1 && p.getPos2() == pos2) ||
-                        (p.getPos1() == pos2 && p.getPos2() == pos1))
-                .findFirst()
-                .orElse(null);
+        return pairs
+            .stream()
+            .filter(p -> (p.getPos1() == pos1 && p.getPos2() == pos2) || (p.getPos1() == pos2 && p.getPos2() == pos1))
+            .findFirst()
+            .orElse(null);
     }
 
     // -------------------------------------------------------------------------
@@ -58,7 +78,11 @@ class Fr3dParserTest {
     @DisplayName("1YMO_A – canonical count (14)")
     void test1YMO_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("1YMO_A_A_basepair.json"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(14, cww);
         assertEquals(cww, s.getCanonical().size());
     }
@@ -106,7 +130,11 @@ class Fr3dParserTest {
     @DisplayName("2K95_A – canonical count (15)")
     void test2K95_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2K95_A_A_basepair.json"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(15, cww);
     }
 
@@ -135,7 +163,11 @@ class Fr3dParserTest {
     @DisplayName("2M8K_A – canonical count (17)")
     void test2M8K_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2M8K_A_A_basepair.json"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(17, cww);
     }
 
@@ -143,7 +175,11 @@ class Fr3dParserTest {
     @DisplayName("2M8K_A – cWH pairs count (6)")
     void test2M8K_A_cWH() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("2M8K_A_A_basepair.json"));
-        long cwh = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWH).count();
+        long cwh = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWH)
+            .count();
         assertEquals(6, cwh);
     }
 
@@ -163,7 +199,11 @@ class Fr3dParserTest {
     @DisplayName("4PLX_A – canonical count (24)")
     void test4PLX_A_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A_A_basepair.json"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(24, cww);
         assertEquals(cww, s.getCanonical().size());
     }
@@ -188,7 +228,11 @@ class Fr3dParserTest {
     @DisplayName("4PLX_A – tSS bond type")
     void test4PLX_A_tSS() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_A_A_basepair.json"));
-        long tss = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_tSS).count();
+        long tss = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_tSS)
+            .count();
         assertEquals(1, tss);
         // tSS pair (6,65) -> indices (5,39)
         assertTrue(containsPair(s.getPairs(), 5, 47));
@@ -210,7 +254,11 @@ class Fr3dParserTest {
     @DisplayName("4PLX_B – canonical count (24)")
     void test4PLX_B_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_B_B_basepair.json"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(21, cww);
     }
 
@@ -228,7 +276,11 @@ class Fr3dParserTest {
     @DisplayName("4PLX_C – canonical count (18)")
     void test4PLX_C_canonicalCount() throws Exception {
         ExtendedRNASecondaryStructure s = parser.parse(resource("4PLX_C_C_basepair.json"));
-        long cww = s.getPairs().stream().filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW).count();
+        long cww = s
+            .getPairs()
+            .stream()
+            .filter(p -> p.getType() == BondType.LEONTIS_WESTHOF_cWW)
+            .count();
         assertEquals(21, cww);
     }
 
@@ -239,18 +291,17 @@ class Fr3dParserTest {
     @DisplayName("All bond types in files are recognized (no UNKNOWN)")
     void testNoUnknownBondTypes() throws Exception {
         String[] files = {
-                "1YMO_A_A_basepair.json",
-                "2K95_A_A_basepair.json",
-                "2M8K_A_A_basepair.json",
-                "4PLX_A_A_basepair.json",
-                "4PLX_B_B_basepair.json",
-                "4PLX_C_C_basepair.json"
+            "1YMO_A_A_basepair.json",
+            "2K95_A_A_basepair.json",
+            "2M8K_A_A_basepair.json",
+            "4PLX_A_A_basepair.json",
+            "4PLX_B_B_basepair.json",
+            "4PLX_C_C_basepair.json",
         };
         for (String file : files) {
             ExtendedRNASecondaryStructure s = parser.parse(resource(file));
             for (Pair p : s.getPairs()) {
-                assertNotEquals(BondType.UNKNOWN, p.getType(),
-                        "Unknown bond type in " + file + " for pair " + p);
+                assertNotEquals(BondType.UNKNOWN, p.getType(), "Unknown bond type in " + file + " for pair " + p);
             }
         }
     }

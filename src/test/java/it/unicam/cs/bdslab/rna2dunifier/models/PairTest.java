@@ -1,9 +1,25 @@
+/*
+ * Copyright 2026 Francesco Palozzi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unicam.cs.bdslab.rna2dunifier.models;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test for {@link Pair}.
@@ -19,7 +35,7 @@ class PairTest {
     @DisplayName("Constructors with positions and BondType set correctly the fields")
     void constructorWithBondType() {
         Pair p = new Pair(1, 10, BondType.LEONTIS_WESTHOF_cWW);
-        assertEquals(1,  p.getPos1());
+        assertEquals(1, p.getPos1());
         assertEquals(10, p.getPos2());
         assertEquals(BondType.LEONTIS_WESTHOF_cWW, p.getType());
         assertNull(p.getNucleotide1());
@@ -46,7 +62,7 @@ class PairTest {
     @DisplayName("Complete Constructor")
     void constructorFull() {
         Pair p = new Pair(3, 14, "A", "U", BondType.LEONTIS_WESTHOF_tWW);
-        assertEquals(3,  p.getPos1());
+        assertEquals(3, p.getPos1());
         assertEquals(14, p.getPos2());
         assertEquals("A", p.getNucleotide1());
         assertEquals("U", p.getNucleotide2());
@@ -113,8 +129,7 @@ class PairTest {
     void hashCodeConsistentWithEquals() {
         Pair a = new Pair(1, 5, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
         Pair b = new Pair(5, 1, "C", "G", BondType.LEONTIS_WESTHOF_cWW);
-        assertEquals(a.hashCode(), b.hashCode(),
-                "Pair symmetrics should have the same hashCode");
+        assertEquals(a.hashCode(), b.hashCode(), "Pair symmetrics should have the same hashCode");
     }
 
     // ------------------------------------------------------------------ //
@@ -125,12 +140,12 @@ class PairTest {
     @DisplayName("Builder build a pair correctly")
     void builderFull() {
         Pair p = new Pair.Builder()
-                .setPos1(2)
-                .setPos2(8)
-                .setNucleotide1("A")
-                .setNucleotide2("U")
-                .setType(BondType.LEONTIS_WESTHOF_cHS)
-                .build();
+            .setPos1(2)
+            .setPos2(8)
+            .setNucleotide1("A")
+            .setNucleotide2("U")
+            .setType(BondType.LEONTIS_WESTHOF_cHS)
+            .build();
 
         assertEquals(2, p.getPos1());
         assertEquals(8, p.getPos2());
@@ -144,12 +159,12 @@ class PairTest {
     void builderEquivalentToConstructor() {
         Pair fromConstructor = new Pair(3, 11, "G", "C", BondType.LEONTIS_WESTHOF_tWH);
         Pair fromBuilder = new Pair.Builder()
-                .setPos1(3)
-                .setPos2(11)
-                .setNucleotide1("G")
-                .setNucleotide2("C")
-                .setType(BondType.LEONTIS_WESTHOF_tWH)
-                .build();
+            .setPos1(3)
+            .setPos2(11)
+            .setNucleotide1("G")
+            .setNucleotide2("C")
+            .setType(BondType.LEONTIS_WESTHOF_tWH)
+            .build();
         assertEquals(fromConstructor, fromBuilder);
     }
 
@@ -163,7 +178,7 @@ class PairTest {
         Pair p = new Pair(0, 6, "G", "C", BondType.LEONTIS_WESTHOF_cWW);
         String s = p.toString();
         assertTrue(s.contains("cWW"), "toString should contain BondType info");
-        assertTrue(s.contains("0"),   "toString should contain pos1");
-        assertTrue(s.contains("6"),   "toString should contain pos2");
+        assertTrue(s.contains("0"), "toString should contain pos1");
+        assertTrue(s.contains("6"), "toString should contain pos2");
     }
 }
