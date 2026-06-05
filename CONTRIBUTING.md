@@ -3,7 +3,7 @@
 Thanks for your interest in contributing!
 
 ## Reporting issues
-- Use the [GitHub issue tracker](https://github.com/your-username/rna2d-unifier/issues)
+- Use the [GitHub issue tracker](https://github.com/bdslab/RNA2DUnifier/issues)
 - Include a minimal example file and the expected output
 
 ## Pull requests
