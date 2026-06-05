@@ -6,6 +6,12 @@ It is designed for researchers and developers who need a reliable, tool-agnostic
 
 ---
 
+## 📚 Documentation
+
+For detailed documentation please visit the [**RNA2DUnifier Wiki**](https://github.com/bdslab/RNA2DUnifier/wiki).
+
+---
+
 ## 🧬 Overview
 
 RNA secondary structure annotation tools (FR3D, RNAview, RNApolis, mc-annotate, Barnaba, bpnet, x3dna-DSSR) each produce different, incompatible output formats.  
