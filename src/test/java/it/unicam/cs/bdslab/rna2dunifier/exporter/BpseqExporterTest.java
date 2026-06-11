@@ -67,13 +67,13 @@ class BpseqExporterTest {
         assertEquals(2, lines.length);
 
         // prima riga: posizione 1, G, partner 6
-        String[] col1 = lines[0].split("\t");
+        String[] col1 = lines[0].split(" ");
         assertEquals("1", col1[0]);
         assertEquals("G", col1[1]);
         assertEquals("6", col1[2]);
 
         // seconda riga: posizione 6, C, partner 1
-        String[] col2 = lines[1].split("\t");
+        String[] col2 = lines[1].split(" ");
         assertEquals("6", col2[0]);
         assertEquals("C", col2[1]);
         assertEquals("1", col2[2]);

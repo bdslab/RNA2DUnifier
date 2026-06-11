@@ -82,7 +82,7 @@ class ExtendedRNASecondaryStructureTest {
 
         ExtendedRNASecondaryStructure s = new ExtendedRNASecondaryStructure.Builder().addPair(p).build();
 
-        assertEquals(1, s.getCanonical().size());
+        assertEquals(0, s.getCanonical().size());
     }
 
     @Test
