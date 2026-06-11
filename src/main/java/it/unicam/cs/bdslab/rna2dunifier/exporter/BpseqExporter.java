@@ -99,6 +99,8 @@ public class BpseqExporter {
         String seq = this.getSequence(structure);
         Map<BondType, Map<Integer, List<Integer>>> partnerMap = this.buildPartnerMap(structure);
 
+        int[] colWidths = this.getColumnsFormat(structure, seq, partnerMap);
+
         for (int i = 0; i < seq.length(); i++) {
             char nucleotide = seq.charAt(i);
             result
@@ -125,6 +127,52 @@ public class BpseqExporter {
             result.append("\n");
         }
         return result.toString();
+    }
+
+    /**
+     * Calculates the minimum required width for each column.
+     *
+     * @param structure the RNA secondary structure
+     * @param seq the RNA sequence
+     * @param partnerMap the partner map
+     * @return array of 14 integers: column widths (index, nucleotide, 12 LW types)
+     */
+    private int[] getColumnsFormat(
+        ExtendedRNASecondaryStructure structure,
+        String seq,
+        Map<BondType, Map<Integer, List<Integer>>> partnerMap
+    ) {
+        int n = seq.length();
+        // Initialize with minimum values
+        int[] colWidths = { 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 };
+
+        // Iterate over all positions
+        for (int i = 0; i < n; i++) {
+            // Update index column width
+            colWidths[0] = Math.max(colWidths[0], String.valueOf(i + 1).length());
+
+            // Update nucleotide column width
+            String nt = String.valueOf(seq.charAt(i));
+            colWidths[1] = Math.max(colWidths[1], nt.length());
+
+            // Update bond type columns
+            int colIdx = 2; // Associated with bond type columns
+            for (BondType type : BondType.getLeontisWesthofFamily()) {
+                Map<Integer, List<Integer>> posMap = partnerMap.get(type);
+                List<Integer> partners = (posMap != null) ? posMap.get(i) : null;
+                String cell = "0";
+                if (partners != null && !partners.isEmpty()) {
+                    cell = partners
+                        .stream()
+                        .map(p -> String.valueOf(p + 1)) // convert to 1-based
+                        .collect(Collectors.joining(","));
+                }
+                colWidths[colIdx] = Math.max(colWidths[colIdx], cell.length());
+                colIdx++;
+            }
+        }
+
+        return colWidths;
     }
 
     private Pair findPair(int pos, List<Pair> pairs) {
