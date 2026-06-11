@@ -154,10 +154,10 @@ public enum BondType {
     /**
      * Checks whether this bond type represents a canonical (Watson‑Crick/Watson‑Crick) base pair.
      *
-     * @return {@code true} for cWW or tWW; {@code false} otherwise (including UNKNOWN and STACKING)
+     * @return {@code true} for cWW; {@code false} otherwise (including UNKNOWN and STACKING)
      */
     public boolean isCanonical() {
-        return this == LEONTIS_WESTHOF_cWW || this == LEONTIS_WESTHOF_tWW;
+        return this == LEONTIS_WESTHOF_cWW;
     }
 
     /**
