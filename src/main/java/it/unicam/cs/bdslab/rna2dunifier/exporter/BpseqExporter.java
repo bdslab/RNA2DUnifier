@@ -65,9 +65,9 @@ public class BpseqExporter {
             if (pair == null) continue;
 
             sb.append(i + 1)
-                .append("\t")
+                .append(" ")
                 .append(seq.charAt(i))
-                .append("\t")
+                .append(" ")
                 .append((pair.getPos1() == i ? pair.getPos2() : pair.getPos1()) + 1)
                 .append("\n");
         }
