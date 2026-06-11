@@ -158,7 +158,10 @@ public class BpseqExporter {
     ) {
         int n = seq.length();
         // Initialize with minimum values
-        int[] colWidths = { 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 };
+        int[] colWidths = Arrays.asList(HEADERS)
+            .stream()
+            .mapToInt(s -> s.length())
+            .toArray();
 
         // Iterate over all positions
         for (int i = 0; i < n; i++) {
