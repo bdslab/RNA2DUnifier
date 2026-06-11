@@ -42,9 +42,17 @@ import java.util.stream.Collectors;
  */
 public class BpseqExporter {
 
-    private static final String HEADER =
-        "Index\tNucleotide\t" +
-        String.join("\t", BondType.getLeontisWesthofFamily().stream().map(BondType::getInfo).toList());
+    private static final String[] HEADERS = getHeaders();
+
+    private static String[] getHeaders() {
+        List<String> headers = new ArrayList<>();
+        headers.add("id");
+        headers.add("nt");
+        for (BondType bt : BondType.getLeontisWesthofFamily()) {
+            headers.add(bt.getInfo()); // "cWW", "tWW", ..., "tSS"
+        }
+        return headers.toArray(new String[0]);
+    }
 
     /**
      * Exports an RNA secondary structure to canonical bpseq format.
@@ -92,39 +100,45 @@ public class BpseqExporter {
      * @return a string containing the extended bpseq representation
      */
     public String printExtendedBPSEQ(ExtendedRNASecondaryStructure structure) {
-        StringBuilder result = new StringBuilder();
-        result.append(HEADER);
-        result.append("\n");
-
         String seq = this.getSequence(structure);
         Map<BondType, Map<Integer, List<Integer>>> partnerMap = this.buildPartnerMap(structure);
-
         int[] colWidths = this.getColumnsFormat(structure, seq, partnerMap);
 
-        for (int i = 0; i < seq.length(); i++) {
-            char nucleotide = seq.charAt(i);
-            result
-                .append(i + 1)
-                .append("\t")
-                .append(nucleotide)
-                .append("\t");
+        StringBuilder result = new StringBuilder();
 
+        // Header row (left‑aligned, no trailing space after last column)
+        for (int i = 0; i < HEADERS.length; i++) {
+            result.append(padRight(HEADERS[i], colWidths[i]));
+            if (i < HEADERS.length - 1) result.append(' ');
+        }
+        result.append('\n');
+
+        for (int i = 0; i < seq.length(); i++) {
+            // index (1-based)
+            result.append(padRight(String.valueOf(i + 1), colWidths[0]));
+            result.append(" ");
+
+            // nucleotide
+            String nt = String.valueOf(seq.charAt(i));
+            result.append(padRight(nt, colWidths[1]));
+            result.append(' ');
+
+            int colIdx = 2;
             for (BondType type : BondType.getLeontisWesthofFamily()) {
                 Map<Integer, List<Integer>> posMap = partnerMap.get(type);
                 List<Integer> partners = posMap != null ? posMap.get(i) : null;
+                String cell = (partners == null || partners.isEmpty())
+                    ? "0"
+                    : partners
+                          .stream()
+                          .map(p -> String.valueOf(p + 1))
+                          .collect(Collectors.joining(","));
 
-                if (partners == null || partners.isEmpty()) {
-                    result.append("0\t");
-                } else {
-                    // Convert index from 0-based to 1-based
-                    String partnerStr = partners
-                        .stream()
-                        .map(p -> String.valueOf(p + 1))
-                        .collect(Collectors.joining(","));
-                    result.append(partnerStr).append("\t");
-                }
+                result.append(padRight(cell, colWidths[colIdx]));
+                if (colIdx < colWidths.length - 1) result.append(' ');
+                colIdx++;
             }
-            result.append("\n");
+            result.append('\n');
         }
         return result.toString();
     }
@@ -231,5 +245,9 @@ public class BpseqExporter {
         }
 
         return map;
+    }
+
+    private String padRight(String s, int width) {
+        return String.format("%-" + width + "s", s);
     }
 }
