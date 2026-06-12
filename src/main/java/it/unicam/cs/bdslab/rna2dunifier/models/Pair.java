@@ -49,7 +49,7 @@ public final class Pair {
     public Pair(int pos1, int pos2, BondType type) {
         this.pos1 = pos1;
         this.pos2 = pos2;
-        this.type = type;
+        this.type = type != null ? type : BondType.UNKNOWN;
         this.nucleotide1 = null;
         this.nucleotide2 = null;
     }
