@@ -173,7 +173,7 @@ class RnaUnifierIntegrationTest {
             .lines()
             .filter(l -> !l.isBlank())
             .forEach(line -> {
-                String[] cols = line.split("\t");
+                String[] cols = line.split(" ");
                 assertEquals(3, cols.length, "Every row of canonical BPSEQ should have 3 columns: " + line);
             });
     }
@@ -188,7 +188,7 @@ class RnaUnifierIntegrationTest {
             .lines()
             .filter(l -> !l.isBlank())
             .forEach(line -> {
-                String[] cols = line.split("\t");
+                String[] cols = line.split(" ");
                 int idx = Integer.parseInt(cols[0]);
                 int partner = Integer.parseInt(cols[2]);
                 assertTrue(idx >= 1, "Index should be >= 1: " + line);

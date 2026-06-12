@@ -42,9 +42,17 @@ import java.util.stream.Collectors;
  */
 public class BpseqExporter {
 
-    private static final String HEADER =
-        "Index\tNucleotide\t" +
-        String.join("\t", BondType.getLeontisWesthofFamily().stream().map(BondType::getInfo).toList());
+    private static final String[] HEADERS = getHeaders();
+
+    private static String[] getHeaders() {
+        List<String> headers = new ArrayList<>();
+        headers.add("id");
+        headers.add("nt");
+        for (BondType bt : BondType.getLeontisWesthofFamily()) {
+            headers.add(bt.getInfo()); // "cWW", "tWW", ..., "tSS"
+        }
+        return headers.toArray(new String[0]);
+    }
 
     /**
      * Exports an RNA secondary structure to canonical bpseq format.
@@ -65,9 +73,9 @@ public class BpseqExporter {
             if (pair == null) continue;
 
             sb.append(i + 1)
-                .append("\t")
+                .append(" ")
                 .append(seq.charAt(i))
-                .append("\t")
+                .append(" ")
                 .append((pair.getPos1() == i ? pair.getPos2() : pair.getPos1()) + 1)
                 .append("\n");
         }
@@ -92,39 +100,96 @@ public class BpseqExporter {
      * @return a string containing the extended bpseq representation
      */
     public String printExtendedBPSEQ(ExtendedRNASecondaryStructure structure) {
-        StringBuilder result = new StringBuilder();
-        result.append(HEADER);
-        result.append("\n");
-
         String seq = this.getSequence(structure);
         Map<BondType, Map<Integer, List<Integer>>> partnerMap = this.buildPartnerMap(structure);
+        int[] colWidths = this.getColumnsFormat(structure, seq, partnerMap);
+
+        StringBuilder result = new StringBuilder();
+
+        // Header row (left‑aligned, no trailing space after last column)
+        for (int i = 0; i < HEADERS.length; i++) {
+            result.append(padRight(HEADERS[i], colWidths[i]));
+            if (i < HEADERS.length - 1) result.append(' ');
+        }
+        result.append('\n');
 
         for (int i = 0; i < seq.length(); i++) {
-            char nucleotide = seq.charAt(i);
-            result
-                .append(i + 1)
-                .append("\t")
-                .append(nucleotide)
-                .append("\t");
+            // index (1-based)
+            result.append(padRight(String.valueOf(i + 1), colWidths[0]));
+            result.append(" ");
 
+            // nucleotide
+            String nt = String.valueOf(seq.charAt(i));
+            result.append(padRight(nt, colWidths[1]));
+            result.append(' ');
+
+            int colIdx = 2;
             for (BondType type : BondType.getLeontisWesthofFamily()) {
                 Map<Integer, List<Integer>> posMap = partnerMap.get(type);
                 List<Integer> partners = posMap != null ? posMap.get(i) : null;
+                String cell = (partners == null || partners.isEmpty())
+                    ? "0"
+                    : partners
+                          .stream()
+                          .map(p -> String.valueOf(p + 1))
+                          .collect(Collectors.joining(","));
 
-                if (partners == null || partners.isEmpty()) {
-                    result.append("0\t");
-                } else {
-                    // Convert index from 0-based to 1-based
-                    String partnerStr = partners
-                        .stream()
-                        .map(p -> String.valueOf(p + 1))
-                        .collect(Collectors.joining(","));
-                    result.append(partnerStr).append("\t");
-                }
+                result.append(padRight(cell, colWidths[colIdx]));
+                if (colIdx < colWidths.length - 1) result.append(' ');
+                colIdx++;
             }
-            result.append("\n");
+            result.append('\n');
         }
         return result.toString();
+    }
+
+    /**
+     * Calculates the minimum required width for each column.
+     *
+     * @param structure the RNA secondary structure
+     * @param seq the RNA sequence
+     * @param partnerMap the partner map
+     * @return array of 14 integers: column widths (index, nucleotide, 12 LW types)
+     */
+    private int[] getColumnsFormat(
+        ExtendedRNASecondaryStructure structure,
+        String seq,
+        Map<BondType, Map<Integer, List<Integer>>> partnerMap
+    ) {
+        int n = seq.length();
+        // Initialize with minimum values
+        int[] colWidths = Arrays.asList(HEADERS)
+            .stream()
+            .mapToInt(s -> s.length())
+            .toArray();
+
+        // Iterate over all positions
+        for (int i = 0; i < n; i++) {
+            // Update index column width
+            colWidths[0] = Math.max(colWidths[0], String.valueOf(i + 1).length());
+
+            // Update nucleotide column width
+            String nt = String.valueOf(seq.charAt(i));
+            colWidths[1] = Math.max(colWidths[1], nt.length());
+
+            // Update bond type columns
+            int colIdx = 2; // Associated with bond type columns
+            for (BondType type : BondType.getLeontisWesthofFamily()) {
+                Map<Integer, List<Integer>> posMap = partnerMap.get(type);
+                List<Integer> partners = (posMap != null) ? posMap.get(i) : null;
+                String cell = "0";
+                if (partners != null && !partners.isEmpty()) {
+                    cell = partners
+                        .stream()
+                        .map(p -> String.valueOf(p + 1)) // convert to 1-based
+                        .collect(Collectors.joining(","));
+                }
+                colWidths[colIdx] = Math.max(colWidths[colIdx], cell.length());
+                colIdx++;
+            }
+        }
+
+        return colWidths;
     }
 
     private Pair findPair(int pos, List<Pair> pairs) {
@@ -183,5 +248,9 @@ public class BpseqExporter {
         }
 
         return map;
+    }
+
+    private String padRight(String s, int width) {
+        return String.format("%-" + width + "s", s);
     }
 }
