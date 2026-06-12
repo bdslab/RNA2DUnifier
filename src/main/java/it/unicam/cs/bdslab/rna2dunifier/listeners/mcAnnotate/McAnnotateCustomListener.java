@@ -134,6 +134,7 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
      */
     @Override
     public void enterResidueLine(McAnnotateGrammarParser.ResidueLineContext ctx) {
+        if (ctx.IDENTIFIER().size() < 2) return;
         String residueId = ctx.IDENTIFIER(0).getText(); // e.g., "A1"
         String nucleotideToken = ctx.IDENTIFIER(1).getText(); // e.g., "A" or "ADE"
         String nucleotide = normalizeNucleotide(nucleotideToken);
@@ -164,16 +165,9 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
     }
 
     private int parseResidueNumber(String residueId) {
-        if (residueId == null || residueId.length() < 2) {
-            logger.warn("Invalid residue identifier: '{}'", residueId);
-            return -1;
-        }
-        try {
-            return Integer.parseInt(residueId.substring(1));
-        } catch (NumberFormatException e) {
-            logger.warn("Failed to parse residue number from '{}'", residueId);
-            return -1;
-        }
+        int i = residueId.length();
+        while (i > 0 && Character.isDigit(residueId.charAt(i - 1))) i--;
+        return Integer.parseInt(residueId.substring(i));
     }
 
     // ----------------------------------------------------------------------
@@ -201,9 +195,18 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
      */
     @Override
     public void enterBasePairLine(McAnnotateGrammarParser.BasePairLineContext ctx) {
-        String pairId = ctx.PAIR_ID().getText();
-        BondType bondType = getBondType(ctx.ORIENTATION(), ctx.BOND().getFirst().getText());
-        Pair p = buildPair(pairId, bondType);
+        String bondText = (ctx.BOND() != null && !ctx.BOND().isEmpty()) ? ctx.BOND().getFirst().getText() : null;
+        TerminalNode orientation = null;
+        if (ctx.ORIENTATION() != null) {
+            for (TerminalNode o : ctx.ORIENTATION()) {
+                String t = o.getText();
+                if (t.equals("cis") || t.equals("trans")) {
+                    orientation = o;
+                    break;
+                }
+            }
+        }
+        Pair p = buildPair(ctx.PAIR_ID().getText(), getBondType(orientation, bondText));
         structureBuilder.addPair(p);
     }
 
@@ -254,7 +257,7 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
      */
     private Pair buildPair(String pos, BondType bondType) {
         String[] parts = pos.split("-");
-        if (parts.length != 2) {
+        if (parts.length < 2) {
             logger.warn("Invalid pair identifier '{}' – cannot build pair", pos);
             return null;
         }
@@ -270,7 +273,7 @@ public class McAnnotateCustomListener extends McAnnotateGrammarBaseListener {
         }
 
         String seq = sequenceBuilder.toString();
-        if (zero1 >= seq.length() || zero2 >= seq.length()) {
+        if (zero1 >= seq.length() || zero2 >= seq.length() || zero1 < 0 || zero2 < 0) {
             logger.warn("Index out of bounds: {} or {} (seq length {})", zero1, zero2, seq.length());
             return null;
         }
