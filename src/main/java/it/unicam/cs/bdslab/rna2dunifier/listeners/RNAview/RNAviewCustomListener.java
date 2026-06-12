@@ -107,6 +107,13 @@ public class RNAviewCustomListener extends RNAviewGrammarBaseListener {
     public void enterBasePairLine(RNAviewGrammarParser.BasePairLineContext ctx) {
         this.pairBuilder = new Pair.Builder();
 
+        if (ctx.ASSIGNED_NUMBERS() == null || ctx.BASE_PAIR() == null) {
+            // bad format (missing tokens or syntax errors): skip the row instead of crashing
+            logger.warn("Missing ASSIGNED_NUMBERS or BASE_PAIR in basePairLine: {}", ctx.getText());
+            this.pairBuilder = null;
+            return;
+        }
+
         // Parse assigned numbers (e.g., "2_54,")
         String positionsString = ctx.ASSIGNED_NUMBERS().getText().replaceAll(",", "");
         String[] posParts = positionsString.split("_");

@@ -60,9 +60,20 @@ class RnaUnifierIntegrationTest {
     /** Verifica che l'output extended BPSEQ abbia un'intestazione corretta. */
     private void assertValidExtendedBpseqHeader(String output) {
         String header = output.lines().findFirst().orElse("");
-        assertTrue(header.startsWith("Index"), "Header should start with 'Index'");
-        assertTrue(header.contains("cWW"), "Header should contain 'cWW'");
-        assertTrue(header.contains("tSS"), "Header should contain 'tSS'");
+        assertTrue(header.startsWith("id"), "Header should start with 'Index'");
+        assertTrue(header.contains("nt"), "Header should contain 'Nucleotide'");
+        assertTrue(header.contains("cWW"), "Header should contain cWW");
+        assertTrue(header.contains("tWW"), "Header should contain tWW");
+        assertTrue(header.contains("cWH"), "Header should contain cWH");
+        assertTrue(header.contains("tWH"), "Header should contain tWH");
+        assertTrue(header.contains("cWS"), "Header should contain cWS");
+        assertTrue(header.contains("tWS"), "Header should contain tWS");
+        assertTrue(header.contains("cHH"), "Header should contain cHH");
+        assertTrue(header.contains("tHH"), "Header should contain tHH");
+        assertTrue(header.contains("cHS"), "Header should contain cHS");
+        assertTrue(header.contains("tHS"), "Header should contain tHS");
+        assertTrue(header.contains("cSS"), "Header should contain cSS");
+        assertTrue(header.contains("tSS"), "Header should contain tSS");
     }
 
     /** Verifica che ogni riga dati abbia esattamente 14 colonne. */
@@ -72,7 +83,7 @@ class RnaUnifierIntegrationTest {
             .skip(1)
             .filter(l -> !l.isBlank())
             .forEach(line -> {
-                String[] cols = line.split("\t");
+                String[] cols = line.split("\\s+");
                 assertEquals(14, cols.length, "Every row should have 14 columns: " + line);
             });
     }

@@ -124,10 +124,19 @@ class BpseqExporterTest {
         String result = exporter.printExtendedBPSEQ(s);
         String header = result.lines().findFirst().orElse("");
 
-        assertTrue(header.contains("Index"), "Header should contain 'Index'");
-        assertTrue(header.contains("Nucleotide"), "Header should contain 'Nucleotide'");
-        // Verifica almeno alcuni tipi LW nell'intestazione
+        assertTrue(header.contains("id"), "Header should contain 'Index'");
+        assertTrue(header.contains("nt"), "Header should contain 'Nucleotide'");
         assertTrue(header.contains("cWW"), "Header should contain cWW");
+        assertTrue(header.contains("tWW"), "Header should contain tWW");
+        assertTrue(header.contains("cWH"), "Header should contain cWH");
+        assertTrue(header.contains("tWH"), "Header should contain tWH");
+        assertTrue(header.contains("cWS"), "Header should contain cWS");
+        assertTrue(header.contains("tWS"), "Header should contain tWS");
+        assertTrue(header.contains("cHH"), "Header should contain cHH");
+        assertTrue(header.contains("tHH"), "Header should contain tHH");
+        assertTrue(header.contains("cHS"), "Header should contain cHS");
+        assertTrue(header.contains("tHS"), "Header should contain tHS");
+        assertTrue(header.contains("cSS"), "Header should contain cSS");
         assertTrue(header.contains("tSS"), "Header should contain tSS");
     }
 
@@ -143,7 +152,7 @@ class BpseqExporterTest {
             .skip(1)
             .filter(l -> !l.isBlank())
             .forEach(line -> {
-                String[] cols = line.split("\t");
+                String[] cols = line.split("\\s+");
                 assertEquals(
                     14,
                     cols.length,
@@ -188,7 +197,7 @@ class BpseqExporterTest {
         String result = exporter.printExtendedBPSEQ(s);
         // La riga della posizione 1 (indice 0) deve avere "4" nella colonna cWW (indice 2)
         String firstDataLine = result.lines().skip(1).findFirst().orElse("");
-        String[] cols = firstDataLine.split("\t");
+        String[] cols = firstDataLine.split("\\s+");
 
         assertEquals("1", cols[0], "Index should be 1");
         assertEquals("G", cols[1], "Nucleotide should be G");
@@ -224,7 +233,7 @@ class BpseqExporterTest {
         String result = exporter.printExtendedBPSEQ(s);
         // Riga indice 2 (pos 1): nucleotide deve essere N
         String secondLine = result.lines().skip(2).findFirst().orElse("");
-        String[] cols = secondLine.split("\t");
+        String[] cols = secondLine.split("\\s+");
         assertEquals("N", cols[1], "The position without nucleotide should be 'N'");
     }
 
@@ -247,7 +256,7 @@ class BpseqExporterTest {
 
         String result = exporter.printExtendedBPSEQ(s);
         String firstDataLine = result.lines().skip(1).findFirst().orElse("");
-        String[] cols = firstDataLine.split("\t");
+        String[] cols = firstDataLine.split("\\s+");
 
         // La colonna cWW (indice 2) deve contenere "4,6" o "6,4"
         String cWWCol = cols[2];
