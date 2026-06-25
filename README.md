@@ -127,17 +127,17 @@ RNA2DUnifier produces two output variants:
 **Extended BPSEQ** — one row per nucleotide, one column per Leontis–Westhof family:
 
 ```
-Index	Nucleotide	cWW	tWW	cWH	tWH	cWS	tWS	cHH	tHH	cHS	tHS	cSS	tSS
-1	G	29	0	0	0	0	0	0	0	0	0	0	0
-2	G	28	0	0	0	0	0	0	0	0	0	0	0
-5	U	25	0	0	0	0	0	0	0	0	35	0	0
+id nt cWW tWW cWH tWH cWS tWS cHH tHH cHS tHS cSS tSS
+1  G  29  0   0   0   0   0   0   0   0   0   0   0
+2  G  28  0   0   0   0   0   0   0   0   0   0   0
+5  U  25  0   0   0   0   0   0   0   0   35  0   0
 ```
 
 **Canonical BPSEQ** — classic three-column format, Watson–Crick pairs only:
 
 ```
-1	G	29
-2	G	28
+1 G 29
+2 G 28
 ```
 
 > `0` means no partner of that type. Multiple partners at one position are comma-separated (e.g., `3,17`).
