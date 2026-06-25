@@ -62,9 +62,9 @@ public class ParserFactory {
      *   <li><b>RNAview</b>  – contains the literal {@code BEGIN_base-pair}</li>
      *   <li><b>McAnnotate</b> – contains {@code Residue conformations}</li>
      *   <li><b>RNApolis</b>  – contains a FASTA-style header ({@code >…}) followed by {@code seq}</li>
+     *   <li><b>Barnaba</b>   – contains the sequence header line {@code # sequence }</li>
      *   <li><b>FR3D</b>      – JSON containing the key {@code "annotations"}</li>
      *   <li><b>X3DNA</b>     – JSON containing the key {@code "pairs"}</li>
-     *   <li><b>Barnaba</b>   – lines matching {@code NINT_INT NINT_INT ANNOTATION} (e.g. {@code A_1_2 G_3_4 WWc})</li>
      *   <li><b>Bpnet</b>     – lines containing a {@code ?} separator and a bond token like {@code W:WC}</li>
      * </ol>
      *
@@ -90,16 +90,14 @@ public class ParserFactory {
         if (preview.contains("Residue conformations")) return ToolType.MCANNOTATE;
         if (preview.contains(">") && preview.contains("seq ")) return ToolType.RNAPOLIS;
 
+        // Barnaba: sequence header line
+        if (preview.contains("# sequence ")) return ToolType.BARNABA;
+
         // JSON formats: distinguish by dominant key
         if (preview.trim().startsWith("{") || preview.trim().startsWith("[")) {
             if (preview.contains("\"annotations\"")) return ToolType.FR3D;
             if (preview.contains("\"pairs\"")) return ToolType.X3DNA;
         }
-
-        // Barnaba: NUCLEOTIDE_INT_INT pairs + WWc/WCc-style annotation
-        if (
-            preview.matches("(?s).*[ACGUacgu]_\\d+_\\d+\\s+[ACGUacgu]_\\d+_\\d+\\s+[GUWCHS]{2}[ct].*")
-        ) return ToolType.BARNABA;
 
         // Bpnet: lines with '?' separator and W:W bond notation
         if (

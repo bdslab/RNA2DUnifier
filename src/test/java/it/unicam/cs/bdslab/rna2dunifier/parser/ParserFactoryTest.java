@@ -113,35 +113,45 @@ class ParserFactoryTest {
     @Test
     @DisplayName("detectTool – Signature Barnaba (nucleotide_INT_INT + annotazione LW)")
     void detectBarnaba() throws IOException {
-        String content = "# comment\n" + "G_1_0      C_10_0      WCc\n" + "A_2_0      U_9_0       WCc\n";
-        assertEquals(ToolType.BARNABA, ParserFactory.detectTool(toBuffered(content)));
+        String content =
+                """
+            # Loading /data/preprocessed/1YMO_A.pdb
+            # ./barnaba/bin/barnaba ANNOTATE --pdb /data/preprocessed/1YMO_A.pdb
+            #RES1       RES2       ANNO
+            # PDB 1YMO_A.pdb
+            # sequence G_1_0-G_2_0-G_3_0-C_4_0-U_5_0-G_6_0-U_7_0-U_8_0-U_9_0-U_10_0-U_11_0-C_12_0-U_13_0-C_14_0-G_15_0-C_16_0-U_17_0-G_18_0-A_19_0-C_20_0-U_21_0-U_22_0-U_23_0-C_24_0-A_25_0-G_26_0-C_27_0-C_28_0-C_29_0-C_30_0-A_31_0-A_32_0-A_33_0-C_34_0-A_35_0-A_36_0-A_37_0-A_38_0-A_39_0-A_40_0-G_41_0-U_42_0-C_43_0-A_44_0-G_45_0-C_46_0-A_47_0
+            G_1_0      C_29_0      WCc
+            G_2_0      C_28_0      WCc
+            G_2_0      A_32_0      XXX
+            """;
+            assertEquals(ToolType.BARNABA, ParserFactory.detectTool(toBuffered(content)));
+        }
+
+        @Test
+        @DisplayName("detectTool – Signature Bpnet (? separator + W:WC bond)")
+        void detectBpnet() throws IOException {
+            String content = "#HEADER info\n" + "     1       1   G ? A       29    29   C ? A    W:WC BP 0.37\n";
+            assertEquals(ToolType.BPNET, ParserFactory.detectTool(toBuffered(content)));
+        }
+
+        @Test
+        @DisplayName("detectTool – unknown stream throws IllegalArgumentException")
+        void detectUnknownThrows() {
+            String garbage = "not supported format\nrow2\nrow3\n";
+            assertThrows(IllegalArgumentException.class, () -> ParserFactory.detectTool(toBuffered(garbage)));
+        }
+
+        @Test
+        @DisplayName("detectTool – the stream get resetted after the read (positions not changed)")
+        void detectToolResetsStream() throws IOException {
+            String content = "BEGIN_base-pair\nsome data\nEND_base-pair\n";
+            InputStream stream = toBuffered(content);
+
+            ParserFactory.detectTool(stream);
+
+            // Dopo la detect, lo stream deve poter essere letto dall'inizio
+            byte[] remaining = stream.readAllBytes();
+            String reconstituted = new String(remaining, StandardCharsets.UTF_8);
+            assertTrue(reconstituted.contains("BEGIN_base-pair"), "The stream should be resetted after detectTool");
+        }
     }
-
-    @Test
-    @DisplayName("detectTool – Signature Bpnet (? separator + W:WC bond)")
-    void detectBpnet() throws IOException {
-        String content = "#HEADER info\n" + "     1       1   G ? A       29    29   C ? A    W:WC BP 0.37\n";
-        assertEquals(ToolType.BPNET, ParserFactory.detectTool(toBuffered(content)));
-    }
-
-    @Test
-    @DisplayName("detectTool – unknown stream throws IllegalArgumentException")
-    void detectUnknownThrows() {
-        String garbage = "not supported format\nrow2\nrow3\n";
-        assertThrows(IllegalArgumentException.class, () -> ParserFactory.detectTool(toBuffered(garbage)));
-    }
-
-    @Test
-    @DisplayName("detectTool – the stream get resetted after the read (positions not changed)")
-    void detectToolResetsStream() throws IOException {
-        String content = "BEGIN_base-pair\nsome data\nEND_base-pair\n";
-        InputStream stream = toBuffered(content);
-
-        ParserFactory.detectTool(stream);
-
-        // Dopo la detect, lo stream deve poter essere letto dall'inizio
-        byte[] remaining = stream.readAllBytes();
-        String reconstituted = new String(remaining, StandardCharsets.UTF_8);
-        assertTrue(reconstituted.contains("BEGIN_base-pair"), "The stream should be resetted after detectTool");
-    }
-}
