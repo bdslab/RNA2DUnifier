@@ -120,8 +120,9 @@ public class RnaUnifier {
      * @throws IllegalArgumentException if the tool type cannot be detected
      */
     public String process(InputStream inputStream, boolean extended) throws IOException, ParseException {
-        ToolType type = ParserFactory.detectTool(inputStream);
-        return process(inputStream, type, extended);
+        BufferedInputStream bis = new BufferedInputStream(inputStream);
+        ToolType type = ParserFactory.detectTool(bis);
+        return process(bis, type, extended);
     }
 
     /**
